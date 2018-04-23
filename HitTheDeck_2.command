@@ -28,7 +28,7 @@ for suit in suits:
 	for card, val in cardValues.iteritems():
 		deck ['{} of {}'.format(card, suit)] = val
 
-discard = {}
+discard = {'Joker': 0}
 
 win = ["Alright alright alright!", "That's what I'm talkin' about!", "Money money money!", "Schweeeet!", "Winner winner, chicken dinner!", "We have a winner!", "Quite nice, that.", "Very good!", "Most excellent!", "You punched that dealer right in the face!", "Do the thing! Score the money units!", "Hot damn!", "You're on fire!", "Bingo! Wait, wrong game...", "Yahtzee! Oh, wrong game...", "So much win!", "Way to go!", "Hooray!", "Awesome.", "Sweet!", "That's some fine card sharkin' right there, I tell you what!", "Woohoo!", "You win all the things!", "Look out, the pit boss is watching!", "Rock on!", "The win is strong with this one.", "Yeehaw!", "Full of win!", "Nice, good one.", "That's the way to do it!", "Yes! Keep it up!", "You are totally ready for Vegas!", "So amaze!", "Positive reinforcement!", "There you go!", "That'll do.", "Someone call the cops! You just committed grand larceny!"]
 
@@ -305,25 +305,45 @@ while True:
 	if len(discard) == shuffle:
 		print "Shuffling!"
 		discard.clear()
+		discard['Joker'] = 0
 	else:
 		pass
+
 	if bank <= 0:
 		print "You are totally out of money! Add more to your bank?"
-		bank = input("$")
+		while True:
+			try:
+				bank += +int(raw_input("$"))
+			except ValueError:
+				print "That wasn't a number, try again."
+				continue
+			if bank < 0:
+				print "You fail at math. Try again!"
+				bank = 0
+				continue
+			else:
+				print "Great, starting you off again with $%d." %bank
+				break
 	else:
 		pass
+
 	if bet == 0:
 		print "You have $%d left in your bank. How much would you like to bet?" %bank
 	else:
 		print "You have $%d left in your bank. How much would you like to bet? Hit Enter to repeat your last bet of $%d." %(bank, bet)
-	try:
-		bet = int(raw_input("$?"))
-	except ValueError:
+	while True:
+		try:
+			bet = int(raw_input("$?"))
+		except ValueError:
+			print "That wasn't a number!"
+			continue
 		if bet == 0:
-			print "Nice try, but you didn't bet anything, the dealer got annoyed and hits you with a shoe."
+			print "Nice try, but you've now annoyed the dealer and he hits you with a shoe. Try betting!"
 			continue
 		else:
-			pass
+			break
+
+
 	if bet > bank:
 		print "You simply don't have the funds for a bet that size!"
 		continue
@@ -336,6 +356,8 @@ while True:
 	dCard1, d1 =drawCard(discard)
 	dCard2, d2 = drawCard(discard)
 	dVal = d1 + d2
+
+# Checking for Aces
 
 	if x == 1 and y != 1:
 		x = 11
