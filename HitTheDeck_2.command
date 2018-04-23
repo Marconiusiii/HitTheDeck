@@ -309,6 +309,7 @@ while True:
 	else:
 		pass
 
+ 
 	if bank <= 0:
 		print "You are totally out of money! Add more to your bank?"
 		while True:
@@ -326,24 +327,22 @@ while True:
 				break
 	else:
 		pass
+# Betting
+
+
 
 	if bet == 0:
 		print "You have $%d left in your bank. How much would you like to bet?" %bank
 	else:
 		print "You have $%d left in your bank. How much would you like to bet? Hit Enter to repeat your last bet of $%d." %(bank, bet)
-	while True:
-		try:
-			bet = int(raw_input("$?"))
-		except ValueError:
-			print "That wasn't a number!"
-			continue
+	try:
+		bet = int(raw_input("$?"))
+	except ValueError:
 		if bet == 0:
-			print "Nice try, but you've now annoyed the dealer and he hits you with a shoe. Try betting!"
+			print "Nice try, but you didn't bet anything, the dealer got annoyed and hits you with a shoe."
 			continue
 		else:
-			break
-
-
+			pass
 	if bet > bank:
 		print "You simply don't have the funds for a bet that size!"
 		continue
