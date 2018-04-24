@@ -319,7 +319,8 @@ while True:
 
  
 	if bank <= 0:
-		print "You are totally out of money! Add more to your bank?"
+		print "You are totally out of money!"
+		print "Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet."
 		while True:
 			try:
 				bank += +int(raw_input("$"))
