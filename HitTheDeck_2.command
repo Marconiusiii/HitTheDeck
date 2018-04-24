@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import random
+import collections
 
 # Testing newDeck git
 
@@ -28,27 +29,35 @@ for suit in suits:
 	for card, val in cardValues.iteritems():
 		deck ['{} of {}'.format(card, suit)] = val
 
-discard = {'Joker': 0}
+discard = []
 
 win = ["Alright alright alright!", "That's what I'm talkin' about!", "Money money money!", "Schweeeet!", "Winner winner, chicken dinner!", "We have a winner!", "Quite nice, that.", "Very good!", "Most excellent!", "You punched that dealer right in the face!", "Do the thing! Score the money units!", "Hot damn!", "You're on fire!", "Bingo! Wait, wrong game...", "Yahtzee! Oh, wrong game...", "So much win!", "Way to go!", "Hooray!", "Awesome.", "Sweet!", "That's some fine card sharkin' right there, I tell you what!", "Woohoo!", "You win all the things!", "Look out, the pit boss is watching!", "Rock on!", "The win is strong with this one.", "Yeehaw!", "Full of win!", "Nice, good one.", "That's the way to do it!", "Yes! Keep it up!", "You are totally ready for Vegas!", "So amaze!", "Positive reinforcement!", "There you go!", "That'll do.", "Someone call the cops! You just committed grand larceny!"]
 
 lose = ["What in the ass?", "You just got F'd in the A!", "Dammit, dammit, dammit!",  "Aww shucks.", "Crap!", "Total bollocks, that.", "Hey, wha' happened?", "Rat farts!", "Total balls.", "Oh biscuits!", "Oh applesauce!", "That...that was not good.", "Do or do not. There is no try!", "Ouch, not pleasant.", "Fiddlesticks!", "You were eaten by a Gru.", "Your card skills are lacking.", "Fanned on that one...", "Robbed!", "Ah shit.", "Damn, too bad.", "Frak!", "Oh no!", "You are doing it wrong!", "Oops, that's a loss.", "So much for your retirement.", "So much for college tuition.", "Hey, at least the drinks are free.", "Better luck next hand!", "Your chips are getting low.", "Aack, not good!", "That's unfortunate.", "Sorry, you lost.", "Loser!", "That's a loser!", "Who shuffled this deck?", "Who cut this round?", "This dealer is totally cheating.", "At least you get free table massages.", "That's not what I meant when I said I like big busts!", "Try again."]
 
 #Draw function
-def drawCard(discard):
+def drawCard(discard, deckAmount):
+	cardLimit = 4 * deckAmount
 	while True:
 		card, cardVal = random.choice(list(deck.items()))
-		if card in discard:
+		if card in discard and deckAmount == 1:
 			continue
+		elif card in discard and deckAmount > 1:
+			a = discard.count(card)
+			if a == cardLimit:
+				continue
+			else:
+				break
 		else:
-			discard[card] = cardVal
-			break
+			pass
+		break
+	discard.append(card)
 	return card, cardVal
 
 # Hit function
 def hit(handVal, x, y, discard):
 	while True:
-		cardHit, z = drawCard(discard) 
+		cardHit, z = drawCard(discard, deckAmount) 
 		if z == 1 and handVal + 11 <= 21:
 			z = 11
 			handVal += z
@@ -79,7 +88,7 @@ def hit(handVal, x, y, discard):
 
 #Double Down function
 def doubleDown(handVal, x, y, discard):
-	ddCard, dd = drawCard(discard)
+	ddCard, dd = drawCard(discard, deckAmount)
 	if dd == 1 and handVal + 11 <= 21:
 		dd == 11
 		handVal += dd
@@ -110,7 +119,7 @@ def dealer(dCard1, dCard2, d1, d2, discard):
 	print "the dealer has the %s and the %s for a total of %d." %(dCard2, dCard1, dVal)
 	if dVal < 17:
 		while True:
-			dHit, dh1 = drawCard(discard)
+			dHit, dh1 = drawCard(discard, deckAmount)
 			if dh1 == 1 and dVal + 11 <=21:
 				dh1 = 11
 				dVal += dh1
@@ -138,8 +147,8 @@ def dealer(dCard1, dCard2, d1, d2, discard):
 def split(x, y, discard):
 	betDouble1 = 0
 	betDouble2 = 0
-	spCard1, sp1 = drawCard(discard)
-	spCard2, sp2 = drawCard(discard)
+	spCard1, sp1 = drawCard(discard, deckAmount)
+	spCard2, sp2 = drawCard(discard, deckAmount)
 	if x == 1 and y == 1:
 		x = 11
 		y = 11
@@ -159,7 +168,7 @@ def split(x, y, discard):
 	h1 = raw_input(">")
 	if h1 == 'h':
 		while True:
-			handHit1, spH1 = drawCard(discard)
+			handHit1, spH1 = drawCard(discard, deckAmount)
 			if spH1 == 1 and hand1 + 11 <= 21:
 				spH1 = 11
 				hand1 += spH1
@@ -186,7 +195,7 @@ def split(x, y, discard):
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
-		ddHand1, ddH1 = drawCard(discard)
+		ddHand1, ddH1 = drawCard(discard, deckAmount)
 		if ddH1 == 1 and hand1 + 11 <= 21:
 			ddH1 = 11
 			hand1 += ddH1
@@ -211,7 +220,7 @@ def split(x, y, discard):
 	h2 = raw_input(">")
 	if h2 == 'h':
 		while True:
-			handHit2, spH2 = drawCard(discard)
+			handHit2, spH2 = drawCard(discard, deckAmount)
 			if spH2 == 1 and hand2 + 11 <= 21:
 				spH2 = 11
 				hand2 += spH2
@@ -238,7 +247,7 @@ def split(x, y, discard):
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
-		ddHand2, ddH2 = drawCard(discard)
+		ddHand2, ddH2 = drawCard(discard, deckAmount)
 		if ddH2 == 1 and hand2 + 11 <= 21:
 			ddH2 = 11
 			hand2 += ddH2
@@ -304,8 +313,7 @@ shuffle = deckAmount * 52 - 10
 while True:
 	if len(discard) == shuffle:
 		print "Shuffling!"
-		discard.clear()
-		discard['Joker'] = 0
+		del discard[:]
 	else:
 		pass
 
@@ -349,11 +357,11 @@ while True:
 	else:
 		print "You bet $%d." %bet
 
-	card1, x = drawCard(discard)
-	card2, y = drawCard(discard)
+	card1, x = drawCard(discard, deckAmount)
+	card2, y = drawCard(discard, deckAmount)
 
-	dCard1, d1 =drawCard(discard)
-	dCard2, d2 = drawCard(discard)
+	dCard1, d1 =drawCard(discard, deckAmount)
+	dCard2, d2 = drawCard(discard, deckAmount)
 	dVal = d1 + d2
 
 # Checking for Aces
