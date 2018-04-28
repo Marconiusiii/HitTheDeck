@@ -1,60 +1,82 @@
-#!/usr/bin/env python
-
 import random
 
-deck = {}
 
-suits = ['Spades', 'Clubs', 'Hearts', 'Diamonds']
-
-cardValues = {
-'Ace': 1,
-'2': 2,
-'3': 3,
-'4': 4,
-'5': 5,
-'6': 6,
-'7': 7,
-'8': 8,
-'9': 9,
-'10': 10,
-'Jack': 10,
-'Queen': 10,
-'King': 10
+deck = {
+'Ace of Spades': 1,
+'2 of Spades': 2,
+'3 of Spades': 3,
+'4 of Spades': 4,
+'5 of Spades': 5,
+'6 of Spades': 6,
+'7 of Spades': 7,
+'8 of spades': 8,
+'9 of Spades': 9,
+'10 of Spades': 10,
+'Jack of Spades': 10,
+'Queen of Spades': 10,
+'King of Spades': 10,
+'Ace of Hearts': 1,
+'2 of Hearts': 2,
+'3 of Hearts': 3,
+'4 of Hearts': 4,
+'5 of Hearts': 5,
+'6 of Hearts': 6,
+'7 of Hearts': 7,
+'8 of Hearts': 8,
+'9 of Hearts': 9,
+'10 of Hearts': 10,
+'Jack of Hearts': 10,
+'Queen of Hearts': 10,
+'King of Hearts': 10,
+'Ace of Clubs': 1,
+'2 of Clubs': 2,
+'3 of Clubs': 3,
+'4 of Clubs': 4,
+'5 of Clubs': 5,
+'6 of Clubs': 6,
+'7 of Clubs': 7,
+'8 of Clubs': 8,
+'9 of Clubs': 9,
+'10 of Clubs': 10,
+'Jack of Clubs': 10,
+'Queen of Clubs': 10,
+'King of Clubs': 10,
+'Ace of Diamonds': 1,
+'2 of Diamonds': 2,
+'3 of Diamonds': 3,
+'4 of Diamonds': 4,
+'5 of Diamonds': 5,
+'6 of Diamonds': 6,
+'7 of Diamonds': 7,
+'8 of Diamonds': 8,
+'9 of Diamonds': 9,
+'10 of Diamonds': 10,
+'Jack of Diamonds': 10,
+'Queen of Diamonds': 10,
+'King of Diamonds': 10
 }
 
-for suit in suits:
-	for card, val in cardValues.iteritems():
-		deck ['{} of {}'.format(card, suit)] = val
-
-discard = []
+discard = {}
 
 win = ["Alright alright alright!", "That's what I'm talkin' about!", "Money money money!", "Schweeeet!", "Winner winner, chicken dinner!", "We have a winner!", "Quite nice, that.", "Very good!", "Most excellent!", "You punched that dealer right in the face!", "Do the thing! Score the money units!", "Hot damn!", "You're on fire!", "Bingo! Wait, wrong game...", "Yahtzee! Oh, wrong game...", "So much win!", "Way to go!", "Hooray!", "Awesome.", "Sweet!", "That's some fine card sharkin' right there, I tell you what!", "Woohoo!", "You win all the things!", "Look out, the pit boss is watching!", "Rock on!", "The win is strong with this one.", "Yeehaw!", "Full of win!", "Nice, good one.", "That's the way to do it!", "Yes! Keep it up!", "You are totally ready for Vegas!", "So amaze!", "Positive reinforcement!", "There you go!", "That'll do.", "Someone call the cops! You just committed grand larceny!"]
 
 lose = ["What in the ass?", "You just got F'd in the A!", "Dammit, dammit, dammit!",  "Aww shucks.", "Crap!", "Total bollocks, that.", "Hey, wha' happened?", "Rat farts!", "Total balls.", "Oh biscuits!", "Oh applesauce!", "That...that was not good.", "Do or do not. There is no try!", "Ouch, not pleasant.", "Fiddlesticks!", "You were eaten by a Gru.", "Your card skills are lacking.", "Fanned on that one...", "Robbed!", "Ah shit.", "Damn, too bad.", "Frak!", "Oh no!", "You are doing it wrong!", "Oops, that's a loss.", "So much for your retirement.", "So much for college tuition.", "Hey, at least the drinks are free.", "Better luck next hand!", "Your chips are getting low.", "Aack, not good!", "That's unfortunate.", "Sorry, you lost.", "Loser!", "That's a loser!", "Who shuffled this deck?", "Who cut this round?", "This dealer is totally cheating.", "At least you get free table massages.", "That's not what I meant when I said I like big busts!", "Try again."]
 
 #Draw function
-def drawCard(discard, deckAmount):
-	cardLimit = 4 * deckAmount
+def drawCard(discard):
 	while True:
 		card, cardVal = random.choice(list(deck.items()))
-		if card in discard and deckAmount == 1:
+		if card in discard:
 			continue
-		elif card in discard and deckAmount > 1:
-			a = discard.count(card)
-			if a == cardLimit:
-				continue
-			else:
-				break
 		else:
-			pass
-		break
-	discard.append(card)
-	return card, cardVal
+			discard[card] = cardVal
+			return [card, cardVal]
+			break
 
 # Hit function
 def hit(handVal, x, y, discard):
 	while True:
-		cardHit, z = drawCard(discard, deckAmount) 
+		cardHit, z = drawCard(discard) 
 		if z == 1 and handVal + 11 <= 21:
 			z = 11
 			handVal += z
@@ -74,7 +96,7 @@ def hit(handVal, x, y, discard):
 			break
 		else:
 			pass
-		print "Hit(h) or Stand(s)?"
+		print "Hit or stand?"
 		hitAgain = raw_input(">")
 		if hitAgain == 'h':
 			continue
@@ -85,9 +107,9 @@ def hit(handVal, x, y, discard):
 
 #Double Down function
 def doubleDown(handVal, x, y, discard):
-	ddCard, dd = drawCard(discard, deckAmount)
+	ddCard, dd = drawCard(discard)
 	if dd == 1 and handVal + 11 <= 21:
-		dd = 11
+		dd == 11
 		handVal += dd
 	elif x == 11 and handVal + dd > 21:
 		x = 1
@@ -116,7 +138,7 @@ def dealer(dCard1, dCard2, d1, d2, discard):
 	print "the dealer has the %s and the %s for a total of %d." %(dCard2, dCard1, dVal)
 	if dVal < 17:
 		while True:
-			dHit, dh1 = drawCard(discard, deckAmount)
+			dHit, dh1 = drawCard(discard)
 			if dh1 == 1 and dVal + 11 <=21:
 				dh1 = 11
 				dVal += dh1
@@ -144,8 +166,8 @@ def dealer(dCard1, dCard2, d1, d2, discard):
 def split(x, y, discard):
 	betDouble1 = 0
 	betDouble2 = 0
-	spCard1, sp1 = drawCard(discard, deckAmount)
-	spCard2, sp2 = drawCard(discard, deckAmount)
+	spCard1, sp1 = drawCard(discard)
+	spCard2, sp2 = drawCard(discard)
 	if x == 1 and y == 1:
 		x = 11
 		y = 11
@@ -165,7 +187,7 @@ def split(x, y, discard):
 	h1 = raw_input(">")
 	if h1 == 'h':
 		while True:
-			handHit1, spH1 = drawCard(discard, deckAmount)
+			handHit1, spH1 = drawCard(discard)
 			if spH1 == 1 and hand1 + 11 <= 21:
 				spH1 = 11
 				hand1 += spH1
@@ -183,7 +205,7 @@ def split(x, y, discard):
 				break
 			else:
 				pass
-			print "Hit(h) or Stand(s)?"
+			print "Hit or stand?"
 			h1Again = raw_input(">")
 			if h1Again == 'h':
 				continue
@@ -192,7 +214,7 @@ def split(x, y, discard):
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
-		ddHand1, ddH1 = drawCard(discard, deckAmount)
+		ddHand1, ddH1 = drawCard(discard)
 		if ddH1 == 1 and hand1 + 11 <= 21:
 			ddH1 = 11
 			hand1 += ddH1
@@ -217,7 +239,7 @@ def split(x, y, discard):
 	h2 = raw_input(">")
 	if h2 == 'h':
 		while True:
-			handHit2, spH2 = drawCard(discard, deckAmount)
+			handHit2, spH2 = drawCard(discard)
 			if spH2 == 1 and hand2 + 11 <= 21:
 				spH2 = 11
 				hand2 += spH2
@@ -235,7 +257,7 @@ def split(x, y, discard):
 				break
 			else:
 				pass
-			print "Hit(h) or Stand(s)?"
+			print "Hit or stand?"
 			h2Again = raw_input(">")
 			if h2Again == 'h':
 				continue
@@ -244,7 +266,7 @@ def split(x, y, discard):
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
-		ddHand2, ddH2 = drawCard(discard, deckAmount)
+		ddHand2, ddH2 = drawCard(discard)
 		if ddH2 == 1 and hand2 + 11 <= 21:
 			ddH2 = 11
 			hand2 += ddH2
@@ -281,62 +303,25 @@ while True:
 		print "That wasn't a number, doofus."
 		continue
 print "Great, starting off with $%d. And how many decks?" %bank
-
-#Decks and Shuffle
-while True:
-	try:
-		deckAmount = int(raw_input("Please choose 1-6 Decks >"))
-	except ValueError:
-		print "That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose."
-		continue
-	if deckAmount == 1:
-		print "Starting a single deck game. Good luck!"
-		break
-	elif 2 <= deckAmount <= 6:
-		print "Starting a game with %d decks. Good luck!" %deckAmount
-		break
-	elif deckAmount > 6:
-		print "Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again."
-		continue
-	elif deckAmount < 1:
-		print "What are you trying to do? Not play Blackjack? Add some cards, you dork!"
-		continue
-	else:
-		print "That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose."
-		continue
+deckAmount = int(raw_input("Please choose 1-6 Decks >"))
+if deckAmount == 1:
+	print "Starting a single deck game. Good luck!"
+else:
+	print "Starting a game with %d decks. Good luck!" %deckAmount
 
 shuffle = deckAmount * 52 - 10
 
 while True:
 	if len(discard) == shuffle:
 		print "Shuffling!"
-		del discard[:]
+		discard.clear()
 	else:
 		pass
-
- 
 	if bank <= 0:
-		print "You are totally out of money!"
-		print "Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet."
-		while True:
-			try:
-				bank += +int(raw_input("$"))
-			except ValueError:
-				print "That wasn't a number, try again."
-				continue
-			if bank < 0:
-				print "You fail at math. Try again!"
-				bank = 0
-				continue
-			else:
-				print "Great, starting you off again with $%d." %bank
-				break
+		print "You are totally out of money! Add more to your bank?"
+		bank = input("$")
 	else:
 		pass
-# Betting
-
-
-
 	if bet == 0:
 		print "You have $%d left in your bank. How much would you like to bet?" %bank
 	else:
@@ -355,14 +340,12 @@ while True:
 	else:
 		print "You bet $%d." %bet
 
-	card1, x = drawCard(discard, deckAmount)
-	card2, y = drawCard(discard, deckAmount)
+	card1, x = drawCard(discard)
+	card2, y = drawCard(discard)
 
-	dCard1, d1 =drawCard(discard, deckAmount)
-	dCard2, d2 = drawCard(discard, deckAmount)
+	dCard1, d1 =drawCard(discard)
+	dCard2, d2 = drawCard(discard)
 	dVal = d1 + d2
-
-# Checking for Aces
 
 	if x == 1 and y != 1:
 		x = 11
@@ -432,7 +415,6 @@ while True:
 	else:
 		pass
 
-# Dealer phase
 
 	dVal = dealer(dCard1, dCard2, d1, d2, discard)
 	if dVal >= 22 and handVal <= 21:
