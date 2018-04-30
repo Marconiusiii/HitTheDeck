@@ -32,24 +32,24 @@ def deckGenerator():
 	return d
 # Draw function
 def draw(deck, deckAmount):
-	if len(deck) <= 10:
-		print "Shuffling!"
-		deck = deckGenerator()
-		del discard[:]
-	else:
-		pass
+#	if len(deck) <= 10:
+#		deck = deckGenerator()
+#		del discard[:]
+#		print "Shuffling the deck!"
+
 	if deckAmount == 1:
 		card, cardVal = random.choice(list(deck.items()))
 		del deck[card]
 	elif deckAmount > 1:
 		while True:
 			card, cardVal = random.choice(list(deck.items()))
-			discard.append(card)
 			if discard.count(card) == deckAmount:
 				del deck[card]
 				continue
 			else:
+				discard.append(card)
 				break
+
 	return card, cardVal
 
 win = ["Alright alright alright!", "That's what I'm talkin' about!", "Money money money!", "Schweeeet!", "Winner winner, chicken dinner!", "We have a winner!", "Quite nice, that.", "Very good!", "Most excellent!", "You punched that dealer right in the face!", "Do the thing! Score the money units!", "Hot damn!", "You're on fire!", "Bingo! Wait, wrong game...", "Yahtzee! Oh, wrong game...", "So much win!", "Way to go!", "Hooray!", "Awesome.", "Sweet!", "That's some fine card sharkin' right there, I tell you what!", "Woohoo!", "You win all the things!", "Look out, the pit boss is watching!", "Rock on!", "The win is strong with this one.", "Yeehaw!", "Full of win!", "Nice, good one.", "That's the way to do it!", "Yes! Keep it up!", "You are totally ready for Vegas!", "So amaze!", "Positive reinforcement!", "There you go!", "That'll do.", "Someone call the cops! You just committed grand larceny!"]
@@ -316,15 +316,6 @@ shuffle = deckAmount * 52 - 20
 deck = deckGenerator()
 
 while True:
-	if len(discard) == shuffle:
-		print "Shuffling!"
-		del discard[:]
-		deck = deckGenerator()
-	elif deckAmount == 1 and len(deck) < 15:
-		print "Shuffling the deck!"
-		deck = deckGenerator()
-	else:
-		pass
 
 	if bank <= 0:
 		print "You are totally out of money!"
@@ -344,9 +335,8 @@ while True:
 				break
 	else:
 		pass
+
 # Betting
-
-
 
 	if bet == 0:
 		print "You have $%d left in your bank. How much would you like to bet?" %bank
@@ -365,6 +355,12 @@ while True:
 		continue
 	else:
 		print "You bet $%d." %bet
+	# Initial Draw
+
+	if len(deck) < 15:
+		deck = deckGenerator()
+		del discard[:]
+		print "Shuffling!"
 
 	card1, x = draw(deck, deckAmount)
 	card2, y = draw(deck, deckAmount)
