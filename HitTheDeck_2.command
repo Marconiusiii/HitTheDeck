@@ -470,28 +470,46 @@ while True:
 				continue
 			else:
 				print "The dealer does not have 21! Phew, carry on."
-	if x == y:
-		print "Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?"
-		choice = raw_input("h, sp, dd, su,  s >")
-	else:
-		print "Hit(h), Double Down(dd), Surrender(su), or Stand(s)?"
-		choice = raw_input("h, dd, su,  s >")
-	if choice == 'h' or choice == 'H':
-		handVal = hit(playerHand, handVal, discard)
-	elif x == y and choice == 'sp':
-		if bank - bet*2 <= 0:
-			print "You don't have enough chips for that! Try hitting instead, you silly goose!"
-			handVal = hit(playerHand, handVal, discard)
+				# Split Check
+	card1StrA, card1StrB, card1StrC = card1.split()
+	card2StrA, card2StrB, card2strC = card2.split()
+
+	while True:
+		if card1StrA == card2StrA:
+			print "Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?"
+			choice = raw_input("h, sp, dd, su,  s >")
 		else:
-			handsplit = split(playerHand, discard)
-	elif choice == 'dd':
-		handVal = doubleDown(playerHand, handVal, discard)
-	elif choice == 'su':
-		print "You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! The dealer had %d." %dVal
-		bank -= bet/2
+			print "Hit(h), Double Down(dd), Surrender(su), or Stand(s)?"
+			choice = raw_input("h, dd, su,  s >")
+		if choice == 'h' or choice == 'H':
+			handVal = hit(playerHand, handVal, discard)
+			break
+		elif card1StrA == card2StrA and choice == 'sp':
+			if bank - bet*2 <= 0:
+				print "You don't have enough chips for that! Try hitting instead, you silly goose!"
+				handVal = hit(playerHand, handVal, discard)
+			else:
+				handsplit = split(playerHand, discard)
+			break
+		elif card1StrA != card2StrA and choice == 'sp':
+			print "You can't split those cards! Splitting wasn't even an option, you sneaky bastard!"
+			continue
+
+		elif choice == 'dd':
+			handVal = doubleDown(playerHand, handVal, discard)
+			break
+		elif choice == 'su':
+			print "You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! The dealer had %d." %dVal
+			bank -= bet/2
+			break
+		elif choice == 's':
+			print "You stand on %d." %handVal
+			break
+		else:
+			print "You can't do that!"
+			continue
+	if choice == 'su':
 		continue
-	elif choice == 's':
-		print "You stand on %d." %handVal
 
 	if handVal >= 22:
 		print "You bust! %s The dealer had %d." %(lose[random.randint(0, len(lose)-1)], dVal)
