@@ -44,9 +44,9 @@ def draw(deck, deckAmount):
 				break
 	return card, cardVal
 
-def handCount(playerHand):
+def handCount(hand):
 	count = 0
-	for i in playerHand:
+	for i in hand:
 		count += i
 	return count
 
