@@ -80,11 +80,12 @@ def hit(playerHand, handVal, discard):
 			handVal = handCount(playerHand)
 		elif playerHand[1] == 11 and handVal + z > 21:
 			playerHand[1] = 1
+			playerHand.append(z)
 			handVal = handCount(playerHand)
-#		elif playerHand[2] == 11 and handVal + z > 21:
-#			playerHand[2] = 1
-#			playerHand.append(z)
-#			handVal = handCount(playerHand)
+		elif len(playerHand) > 2 and  playerHand[2] == 11 and handVal + z > 21:
+			playerHand[2] = 1
+			playerHand.append(z)
+			handVal = handCount(playerHand)
 		else:
 			playerHand.append(z)
 			handVal = handCount(playerHand)
@@ -118,6 +119,7 @@ def doubleDown(playerHand, handVal, discard):
 		handVal = handCount(playerHand)
 	elif playerHand[1] == 11 and handVal + dd > 21:
 		playerHand[1] = 1
+		playerHand.append(dd)
 		HandVal = handCount(playerHand)
 	else:
 		playerHand.append(dd)
@@ -154,10 +156,10 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 				dealerHand[1] = 1
 				dealerHand.append(dh1)
 				dVal = handCount(dealerHand)
-#			elif dealerHand[2] == 11 and dVal + dh1 > 21:
-#				dealerHand[2] = 1
-#				dealerHand.append(dh1)
-#				dVal = handCount(dealerHand)
+			elif len(dealerHand) > 2 and  dealerHand[2] == 11 and dVal + dh1 > 21:
+				dealerHand[2] = 1
+				dealerHand.append(dh1)
+				dVal = handCount(dealerHand)
 			else:
 				dealerHand.append(dh1)
 				dVal = handCount(dealerHand)
@@ -214,10 +216,10 @@ def split(playerHand, discard):
 				playerHand[0] = 1
 				handSP1.append(spH1)
 				hand1 = handCount(handSP1)
-#			elif handSP1[2] == 11 and hand1 + spH1 > 21:
-#				handSP1[2] = 1
-#				handSP1.append(spH1)
-#				hand1 = handCount(handSP1)
+			elif len(handSP1) > 2 and handSP1[2] == 11 and hand1 + spH1 > 21:
+				handSP1[2] = 1
+				handSP1.append(spH1)
+				hand1 = handCount(handSP1)
 			else:
 				handSP1.append(spH1)
 				hand1 = handCount(handSP1)
@@ -278,10 +280,10 @@ def split(playerHand, discard):
 				playerHand[1] = 1
 				handSP2.append(spH2)
 				hand2 = handCount(handSP2)
-#			elif handSP2[2] == 11 and handSP2 + spH2 > 21:
-#				handSP2[2] = 1
-#				handSP2.append(spH2)
-#				hand2 = handCount(handSP2)
+			elif len(handSP2) > 2 and  handSP2[2] == 11 and handSP2 + spH2 > 21:
+				handSP2[2] = 1
+				handSP2.append(spH2)
+				hand2 = handCount(handSP2)
 			else:
 				handSP2.append(spH2)
 				hand2 = handCount(handSP2)
