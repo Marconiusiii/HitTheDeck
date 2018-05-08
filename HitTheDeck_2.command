@@ -75,7 +75,7 @@ def hit(playerHand, handVal, discard):
 			playerHand.append(z)
 			handVal = handCount(playerHand)
 		elif playerHand[0] == 11 and handVal + z > 21:
-			player[0] = 1
+			playerHand[0] = 1
 			playerHand.append(z)
 			handVal = handCount(playerHand)
 		elif playerHand[1] == 11 and handVal + z > 21:
