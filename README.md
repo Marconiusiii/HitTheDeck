@@ -23,11 +23,13 @@ The point of the game is to get your hand as close to 21 as possible without Bus
 
 Doubling Down doubles your bet and you only get 1 card.
 
-Splitting allows you to play two separate hands at once off of two cards of the same value. In this game, you are allowed to split Aces and hit more than once on each hand.
+Splitting allows you to play two separate hands at once off of two cards of the same rank. In this game, you are allowed to split Aces and hit more than once on each hand.
 
-YOu win your bet if the Dealer busts or your hand(s) defeat the Dealer's hand. That will get added to your bank and the round will restart asking you for your bet. 
+This game has the 5 Card Charlie feature enabled, where you will win even money when you hit 3 or more times without busting. This gets paid out before the Dealer phase.
 
-YOu lose if you hit and your hand goes over 21 or if the Dealer's hand defeats yours. Your bet will be deducted from your bank and the round will restart asking you for your new bet.
+You win your bet if the Dealer busts or your hand(s) defeat the Dealer's hand. That will get added to your bank and the round will restart asking you for your bet. 
+
+You lose if you hit and your hand goes over 21 or if the Dealer's hand defeats yours. Your bet will be deducted from your bank and the round will restart asking you for your new bet.
 
 If you run out of money, you have the option to add more to your bank or hit Ctrl-C to exit the game. You can exit the game at any time by hitting Ctrl-C or closing your Terminal session.
 
