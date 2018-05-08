@@ -17,6 +17,7 @@ Start off the game by cashing in money for your bank. You will then be prompted 
 ### Playing the Game
 YOU will be dealt two cards and shown the top facing card of the dealer. From here you will have the option to Hit, Stand, Double Down, or Surrender. These are activated using shortcodes that appear next to their names and hitting Enter.
 
+#### Shortcode Instructions
 * Type *h to Hit.
 * Type *s to Stand.
 * Type *dd to Double Down.
