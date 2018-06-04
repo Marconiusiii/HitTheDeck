@@ -69,7 +69,7 @@ lose = ["What in the ass?", "You just got F'd in the A!", "Dammit, dammit, dammi
 # Hit function
 def hit(playerHand, handVal, discard):
 	while True:
-		cardHit, z = draw(deck, deckAmount) 
+		cardHit, z = draw(deck, deckAmount)
 		if z == 1 and handVal + 11 <= 21:
 			z = 11
 			playerHand.append(z)
@@ -181,7 +181,7 @@ def split(playerHand, discard):
 	betDouble2 = 0
 	spCard1, sp1 = draw(deck, deckAmount)
 	spCard2, sp2 = draw(deck, deckAmount)
-	if playerHand[0] == 11 and playerHand[1] == 1:
+	if playerHand[0] == 11:
 		playerHand[0] = 11
 		playerHand[1] = 11
 	elif (sp1 == 1 and playerHand[0] + 11 <= 21) and (sp2 == 1 and playerHand[1] + 11 <= 21):
@@ -517,6 +517,12 @@ while True:
 		continue
 	else:
 		pass
+# 5 card Charlie
+
+	if len(playerHand) >= 5:
+		print "You just hit up to a 5 Card Charlie! Even money coming to you!"
+		bank += bet
+		print "You now have $%d in your bank!" %bank
 
 # Dealer phase
 
