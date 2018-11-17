@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-
+import OS
 import random
+def clearScreen():
+	os.system('cls' if os.name == 'nt' else 'clear')
 
 deck = {}
 discard = []
@@ -342,6 +344,7 @@ while True:
 		print "That wasn't a number, doofus."
 		continue
 print "Great, starting off with $%d. And how many decks?" %bank
+gameLoops = 0
 
 #Decks and Shuffle
 while True:
@@ -371,7 +374,12 @@ shuffle = deckAmount * 52 - 20
 # Initial deck creation
 deck = deckGenerator()
 
+#Play Begins
 while True:
+	gameLoops += 1
+	if gameLoops == 18:
+		clearScreen()
+		gameLoops = 0
 
 	if bank <= 0:
 		print "You are totally out of money!"
@@ -441,7 +449,7 @@ while True:
 	handVal = handCount(playerHand)
 	if handVal == 21:
 		print "Blackjack! %s You drew the %s and the %s and have shamed the dealer!" %(win[random.randint(0, len(win)-1)], card1, card2)
-		bank += bet*2
+		bank += bet/2 * 3
 		continue
 	else:
 		pass
