@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import OS
+import os
 import random
 def clearScreen():
 	os.system('cls' if os.name == 'nt' else 'clear')
