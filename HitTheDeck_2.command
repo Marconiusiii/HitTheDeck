@@ -449,7 +449,7 @@ while True:
 	handVal = handCount(playerHand)
 	if handVal == 21:
 		print "Blackjack! %s You drew the %s and the %s and have shamed the dealer!" %(win[random.randint(0, len(win)-1)], card1, card2)
-		bank += bet/2 * 3
+		bank += bet//2 * 3
 		continue
 	else:
 		pass
@@ -464,11 +464,11 @@ while True:
 			print "The dealer checks their cards..."
 			if d1 == 10:
 				print "Oops, dealer has 21."
-				bank -= bet/2
+				bank -= bet//2
 				continue
 			else:
 				print "The dealer does not have 21!"
-				bank -= bet/2
+				bank -= bet//2
 		else:
 			print "You decline insurance and the dealer checks their cards..."
 			if d1 == 10:
