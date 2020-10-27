@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+input#!/usr/bin/env python
 import os
 import random
 def clearScreen():
@@ -29,7 +29,7 @@ cardValues = {
 def deckGenerator():
 	d = {}
 	for suit in suits:
-		for card, val in cardValues.iteritems():
+		for card, val in cardValues.items():
 			d ['{} of {}'.format(card, suit)] = val
 	return d
 
@@ -47,7 +47,7 @@ def draw(deck, deckAmount):
 #	if len(deck) <= 10:
 #		deck = deckGenerator()
 #		del discard[:]
-#		print "Shuffling the deck!"
+#		print("Shuffling the deck!")
 
 	if deckAmount == 1:
 		card, cardVal = random.choice(list(deck.items()))
@@ -90,20 +90,20 @@ def hit(playerHand, handVal, discard):
 		else:
 			playerHand.append(z)
 			handVal = handCount(playerHand)
-		print "You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal)
+		print("You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal))
 		if handVal >= 22:
 			break
 		elif handVal == 21:
-			print "Sanding on 21, stop hitting me!"
+			print("Sanding on 21, stop hitting me!")
 			break
 		else:
 			pass
-		print "Hit(h) or Stand(s)?"
-		hitAgain = raw_input(">")
+		print("Hit(h) or Stand(s)?")
+		hitAgain = input(">")
 		if hitAgain == 'h':
 			continue
 		else:
-			print "You stand on {}.".format(handVal)
+			print("You stand on {}.".format(handVal))
 			break
 	return handVal
 
@@ -125,7 +125,7 @@ def doubleDown(playerHand, handVal, discard):
 	else:
 		playerHand.append(dd)
 		handVal = handCount(playerHand)
-	print "You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=ddCard, hand=handVal)
+	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=ddCard, hand=handVal))
 	return handVal
 
 #Dealer engine
@@ -141,7 +141,7 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 		dVal = handCount(dealerHand)
 	else:
 		dVal = handCount(dealerHand)
-	print "the dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal)
+	print("the dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
 	if dVal < 17:
 		while True:
 			dHit, dh1 = draw(deck, deckAmount)
@@ -164,16 +164,16 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 			else:
 				dealerHand.append(dh1)
 				dVal = handCount(dealerHand)
-			print "The dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal)
+			print("The dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
 			if dVal <= 16:
 				continue
 			elif 17 <= dVal <= 21:
-				print "The dealer stands with {}.".format(dVal)
+				print("The dealer stands with {}.".format(dVal))
 				break
 			else:
 				break
 	else:
-		print "The dealer stands on {}.".format(dVal)
+		print("The dealer stands on {}.".format(dVal))
 	return dVal
 
 # Split function
@@ -199,9 +199,9 @@ def split(playerHand, discard):
 
 	handSP2 = [sp2, playerHand[1]]
 	hand2 = handCount(handSP2)
-	print "You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1)
-	print "Hit, Double Down,  or stand on your first hand?"
-	h1 = raw_input(">")
+	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
+	print("Hit, Double Down,  or stand on your first hand?")
+	h1 = input(">")
 	if h1 == 'h':
 		while True:
 			handHit1, spH1 = draw(deck, deckAmount)
@@ -224,18 +224,18 @@ def split(playerHand, discard):
 			else:
 				handSP1.append(spH1)
 				hand1 = handCount(handSP1)
-			print "You drew the {card} and now have {hand}.".format(card=handHit1, hand=hand1)
+			print("You drew the {card} and now have {hand}.".format(card=handHit1, hand=hand1))
 			if hand1 >= 22:
-				print "You bust on your first hand with {}!.".format(hand1)
+				print("You bust on your first hand with {}!.".format(hand1))
 				break
 			else:
 				pass
-			print "Hit(h) or Stand(s)?"
-			h1Again = raw_input(">")
+			print("Hit(h) or Stand(s)?")
+			h1Again = input(">")
 			if h1Again == 'h':
 				continue
 			else:
-				print "You stand with {} on your first hand.".format(hand1)
+				print("You stand with {} on your first hand.".format(hand1))
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
@@ -256,16 +256,16 @@ def split(playerHand, discard):
 			handSP1.append(ddH1)
 			hand1 = handCount(handSP1)
 		if hand1 > 21:
-			print "You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1)
+			print("You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1))
 		else:
-			print "You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=ddHand1, hand=hand1)
+			print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=ddHand1, hand=hand1))
 	elif h1 == 's':
-		print "You stand on your first hand with {}.".format(hand1)
+		print("You stand on your first hand with {}.".format(hand1))
 	else:
 		pass
-	print "You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2)
-	print "Hit, Double Down, or stand?"
-	h2 = raw_input(">")
+	print("You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2))
+	print("Hit, Double Down, or stand?")
+	h2 = input(">")
 	if h2 == 'h':
 		while True:
 			handHit2, spH2 = draw(deck, deckAmount)
@@ -288,18 +288,18 @@ def split(playerHand, discard):
 			else:
 				handSP2.append(spH2)
 				hand2 = handCount(handSP2)
-			print "You drew the {card} and now have {hand}.".format(card=handHit2, hand=hand2)
+			print("You drew the {card} and now have {hand}.".format(card=handHit2, hand=hand2))
 			if hand2 >= 22:
-				print "You bust on your second hand with {}!.".format(hand2)
+				print("You bust on your second hand with {}!.".format(hand2))
 				break
 			else:
 				pass
-			print "Hit(h) or Stand(s)?"
-			h2Again = raw_input(">")
+			print("Hit(h) or Stand(s)?")
+			h2Again = input(">")
 			if h2Again == 'h':
 				continue
 			else:
-				print "You stand with {} on your second hand.".format(hand2)
+				print("You stand with {} on your second hand.".format(hand2))
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
@@ -320,11 +320,11 @@ def split(playerHand, discard):
 			handSP2.append(ddH2)
 			hand2 = handCount(handSP2)
 		if hand2 > 21:
-			print "You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2)
+			print("You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2))
 		else:
-			print "You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=ddHand2, hand=hand2)
+			print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=ddHand2, hand=hand2))
 	elif h2 == 's':
-		print "You stand on your second hand with a total of {}.".format(hand2)
+		print("You stand on your second hand with a total of {}.".format(hand2))
 	else:
 		pass
 
@@ -334,39 +334,39 @@ bet = 0
 bank = 0
 
 # Game starts here
-print "Welcome to Blackjack v.2.75!\n\t\tBy: Marco Salsiccia"
-print "How much would you like to cash in for your bank?"
+print("Hit the Deck! v.3.0\n\t\tBy: Marco Salsiccia")
+print("How much would you like to cash in for your bank?")
 while True:
 	try:
-		bank = int(raw_input("$"))
+		bank = int(input("$"))
 		break
 	except ValueError:
-		print "That wasn't a number, doofus."
+		print("That wasn't a number, doofus.")
 		continue
-print "Great, starting off with ${bank}. And how many decks?".format(bank=bank)
+print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
 gameLoops = 0
 
 #Decks and Shuffle
 while True:
 	try:
-		deckAmount = int(raw_input("Please choose 1-6 Decks >"))
+		deckAmount = int(input("Please choose 1-6 Decks >"))
 	except ValueError:
-		print "That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose."
+		print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
 		continue
 	if deckAmount == 1:
-		print "Starting a single deck game. Good luck!"
+		print("Starting a single deck game. Good luck!")
 		break
 	elif 2 <= deckAmount <= 6:
-		print "Starting a game with {} decks. Good luck!".format(deckAmount)
+		print("Starting a game with {} decks. Good luck!".format(deckAmount))
 		break
 	elif deckAmount > 6:
-		print "Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again."
+		print("Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again.")
 		continue
 	elif deckAmount < 1:
-		print "What are you trying to do? Not play Blackjack? Add some cards, you dork!"
+		print("What are you trying to do? Not play Blackjack? Add some cards, you dork!")
 		continue
 	else:
-		print "That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose."
+		print("That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose.")
 		continue
 
 shuffle = deckAmount * 52 - 20
@@ -382,20 +382,20 @@ while True:
 		gameLoops = 0
 
 	if bank <= 0:
-		print "You are totally out of money!"
-		print "Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet."
+		print("You are totally out of money!")
+		print("Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet.")
 		while True:
 			try:
-				bank += +int(raw_input("$"))
+				bank += +int(input("$"))
 			except ValueError:
-				print "That wasn't a number, try again."
+				print("That wasn't a number, try again.")
 				continue
 			if bank < 0:
-				print "You fail at math. Try again!"
+				print("You fail at math. Try again!")
 				bank = 0
 				continue
 			else:
-				print "Great, starting you off again with ${}.".format(bank)
+				print("Great, starting you off again with ${}.".format(bank))
 				break
 	else:
 		pass
@@ -403,28 +403,28 @@ while True:
 # Betting
 
 	if bet == 0:
-		print "You have ${} left in your bank. How much would you like to bet?".format(bank)
+		print("You have ${} left in your bank. How much would you like to bet?".format(bank))
 	else:
-		print "You have ${bank} left in your bank. How much would you like to bet? Hit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet)
+		print("You have ${bank} left in your bank. How much would you like to bet? Hit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
 	try:
-		bet = int(raw_input("$?"))
+		bet = int(input("$?"))
 	except ValueError:
 		if bet == 0:
-			print "Nice try, but you didn't bet anything, the dealer got annoyed and hits you with a shoe."
+			print("Nice try, but you didn't bet anything, the dealer got annoyed and hits you with a shoe.")
 			continue
 		else:
 			pass
 	if bet > bank:
-		print "You simply don't have the funds for a bet that size!"
+		print("You simply don't have the funds for a bet that size!")
 		continue
 	else:
-		print "You bet ${bet}.".format(bet=bet)
+		print("You bet ${bet}.".format(bet=bet))
 	# Initial Draw
 
 	if len(deck) < 15:
 		deck = deckGenerator()
 		del discard[:]
-		print "\nShuffling!\n"
+		print("\nShuffling!\n")
 
 	card1, x = draw(deck, deckAmount)
 	card2, y = draw(deck, deckAmount)
@@ -448,78 +448,78 @@ while True:
 	playerHand = [x, y]
 	handVal = handCount(playerHand)
 	if handVal == 21:
-		print "Blackjack! {win} You drew the {card1} and the {card2} and have shamed the dealer! ${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3)
+		print("Blackjack! {win} You drew the {card1} and the {card2} and have shamed the dealer! ${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
 		bank += bet//2 * 3
 		continue
 	else:
 		pass
 
-	print "You drew the {card1} and the {card2} for a total of {hand}. The dealer is showing the {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2)
+	print("You drew the {card1} and the {card2} for a total of {hand}. The dealer is showing the {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
 
 # Insurance
 	if d2 == 1:
-		print "Insurance?"
-		ins = raw_input("y/n?")
+		print("Insurance?")
+		ins = input("y/n?")
 		if ins == 'y':
-			print "The dealer checks their cards..."
+			print("The dealer checks their cards...")
 			if d1 == 10:
-				print "Oops, dealer has 21."
+				print("Oops, dealer has 21.")
 				bank -= bet//2
 				continue
 			else:
-				print "The dealer does not have 21!"
+				print("The dealer does not have 21!")
 				bank -= bet//2
 		else:
-			print "You decline insurance and the dealer checks their cards..."
+			print("You decline insurance and the dealer checks their cards...")
 			if d1 == 10:
-				print "They have 21! ", lose[random.randint(0, len(lose)-1)]
+				print("They have 21! {}".format(lose[random.randint(0, len(lose)-1)]))
 				bank -= bet
 				continue
 			else:
-				print "The dealer does not have 21! Phew, carry on."
+				print("The dealer does not have 21! Phew, carry on.")
 				# Split Check
 	card1StrA, card1StrB, card1StrC = card1.split()
 	card2StrA, card2StrB, card2strC = card2.split()
 
 	while True:
 		if card1StrA == card2StrA:
-			print "Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?"
-			choice = raw_input("h, sp, dd, su,  s >")
+			print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?")
+			choice = input("h, sp, dd, su,  s >")
 		else:
-			print "Hit(h), Double Down(dd), Surrender(su), or Stand(s)?"
-			choice = raw_input("h, dd, su,  s >")
+			print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?")
+			choice = input("h, dd, su,  s >")
 		if choice == 'h' or choice == 'H':
 			handVal = hit(playerHand, handVal, discard)
 			break
 		elif card1StrA == card2StrA and choice == 'sp':
 			if bank - bet*2 <= 0:
-				print "You don't have enough chips for that! Try hitting instead, you silly goose!"
+				print("You don't have enough chips for that! Try hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, discard)
 			else:
 				handsplit = split(playerHand, discard)
 			break
 		elif card1StrA != card2StrA and choice == 'sp':
-			print "You can't split those cards! Splitting wasn't even an option, you sneaky bastard!"
+			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
 			continue
 
 		elif choice == 'dd':
 			handVal = doubleDown(playerHand, handVal, discard)
 			break
 		elif choice == 'su':
-			print "You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! The dealer had {}.".format(dVal)
+			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! The dealer had {}.".format(dVal))
 			bank -= bet/2
 			break
 		elif choice == 's':
-			print "You stand on {}.".format(handVal)
+			print("You stand on {}.".format(handVal))
 			break
 		else:
-			print "You can't do that!"
+			print("You can't do that!")
 			continue
 	if choice == 'su':
 		continue
 
 	if handVal >= 22:
-		print "You bust! {lose} The dealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal)
+		print("You bust! {lose} The dealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
 		bank -= bet
 		continue
 	else:
@@ -527,20 +527,20 @@ while True:
 # 5 card Charlie
 
 	if len(playerHand) >= 5:
-		print "You just hit up to a 5 Card Charlie! Even money coming to you!"
+		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
 		bank += bet
-		print "You now have ${} in your bank!".format(bank)
+		print("You now have ${} in your bank!".format(bank))
 
 # Dealer phase
 
 	dVal = dealer(dCard1, dCard2, dealerHand, discard)
 	if dVal >= 22 and handVal <= 21:
-		print "The dealer busts with {dealer}! {win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)])
+		print("The dealer busts with {dealer}! {win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
 		if choice == 'dd':
 			bank += bet*2
 		elif choice == 'sp':
 			if handsplit[0] <= 21 and handsplit[1] <= 21:
-				print "Both your split hands win! ${} coming to you.".format(bet*2)
+				print("Both your split hands win! ${} coming to you.".format(bet*2))
 				bank += bet*2
 				continue
 			else:
@@ -557,15 +557,15 @@ while True:
 		betDouble1 = handsplit[2]
 		betDouble2 = handsplit[3]
 		if hand1 < dVal or hand1 >= 22:
-			print "Your first hand loses!"
+			print("Your first hand loses!")
 			if betDouble1 == 1:
 				bank -= bet*2
 			else:
 				bank -= bet
 		elif hand1 == dVal:
-			print "Your first hand is a push!"
+			print("Your first hand is a push!")
 		else:
-			print "You win with your first hand!"
+			print("You win with your first hand!")
 			if betDouble1 == 1:
 				bank += bet*2
 			else:
@@ -575,30 +575,30 @@ while True:
 				bank -= bet*2
 			else:
 				bank -= bet
-			print "Your second hand loses!"
+			print("Your second hand loses!")
 			continue
 		elif hand2 == dVal:
-			print "Your second hand pushes!"
+			print("Your second hand pushes!")
 			continue
 		else:
 			if betDouble2 == 1:
 				bank += bet*2
 			else:
 				bank += bet
-			print "Your second hand wins! {}".format(win[random.randint(0, len(win)-1)])
+			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
 			continue
 	else:
 		pass
 	if handVal < dVal:
-		print lose[random.randint(0, len(lose)-1)]
+		print(lose[random.randint(0, len(lose)-1)])
 		if choice == 'dd':
 			bank -= bet*2
 		else:
 			bank -= bet
 	elif handVal == dVal:
-		print "It's a push!"
+		print("It's a push!")
 	else:
-		print win[random.randint(0, len(win)-1)]
+		print(win[random.randint(0, len(win)-1)])
 		if choice == 'dd':
 			bank += bet*2
 		else:
