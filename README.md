@@ -5,9 +5,9 @@ A blind coder's first attempt at making a Python-based Blackjack game.
 
 ## Welcome to my game!
 
-This Blackjack game runs in Terminal, iTerm, or whatever shell program you have  to work and run with Python. Double-clicking the file should launch the game in your Terminal app, otherwise from your favorite shell, navigate to the HitTheDeck directory and type:
+This Blackjack game runs in Terminal, iTerm, or whatever shell program you have  to work and run with Python 3. Double-clicking the file should launch the game in your Terminal app, otherwise from your favorite shell, navigate to the HitTheDeck directory and type:
 
-$ python HitTheDeck_2.command
+$ python3 HitTheDeck_2.command
 
 This is a fully featured Blackjack game, containing the ability to Surrender, Split, Double Down, plus has a multi- or single-deck option for play.
 
