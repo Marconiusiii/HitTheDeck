@@ -141,7 +141,7 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 		dVal = handCount(dealerHand)
 	else:
 		dVal = handCount(dealerHand)
-	print("the dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
+	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
 	if dVal < 17:
 		while True:
 			dHit, dh1 = draw(deck, deckAmount)
@@ -164,16 +164,16 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 			else:
 				dealerHand.append(dh1)
 				dVal = handCount(dealerHand)
-			print("The dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
+			print("Dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
 			if dVal <= 16:
 				continue
 			elif 17 <= dVal <= 21:
-				print("The dealer stands with {}.".format(dVal))
+				print("Dealer stands with {}.".format(dVal))
 				break
 			else:
 				break
 	else:
-		print("The dealer stands on {}.".format(dVal))
+		print("Dealer stands on {}.".format(dVal))
 	return dVal
 
 # Split function
@@ -410,7 +410,7 @@ while True:
 		bet = int(input("$?"))
 	except ValueError:
 		if bet == 0:
-			print("Nice try, but you didn't bet anything, the dealer got annoyed and hits you with a shoe.")
+			print("Nice try, but you didn't bet anything, Dealer got annoyed and hits you with a shoe.")
 			continue
 		else:
 			pass
@@ -448,35 +448,35 @@ while True:
 	playerHand = [x, y]
 	handVal = handCount(playerHand)
 	if handVal == 21:
-		print("Blackjack! {win} You drew the {card1} and the {card2} and have shamed the dealer! ${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
+		print("Blackjack! {win} You drew the {card1} and the {card2} and have shamed the Dealer! ${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
 		bank += bet//2 * 3
 		continue
 	else:
 		pass
 
-	print("You drew the {card1} and the {card2} for a total of {hand}. The dealer is showing the {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
+	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
 
 # Insurance
 	if d2 == 1:
 		print("Insurance?")
 		ins = input("y/n?")
 		if ins == 'y':
-			print("The dealer checks their cards...")
+			print("Dealer checks their cards...")
 			if d1 == 10:
-				print("Oops, dealer has 21.")
+				print("Oops, dealer has 21. You lose ${}.".format(bet//2))
 				bank -= bet//2
 				continue
 			else:
-				print("The dealer does not have 21!")
+				print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
 				bank -= bet//2
 		else:
-			print("You decline insurance and the dealer checks their cards...")
+			print("You decline insurance and Dealer checks their cards...")
 			if d1 == 10:
 				print("They have 21! {}".format(lose[random.randint(0, len(lose)-1)]))
 				bank -= bet
 				continue
 			else:
-				print("The dealer does not have 21! Phew, carry on.")
+				print("Dealer does not have 21! Phew, carry on.")
 				# Split Check
 	card1StrA, card1StrB, card1StrC = card1.split()
 	card2StrA, card2StrB, card2strC = card2.split()
@@ -506,7 +506,7 @@ while True:
 			handVal = doubleDown(playerHand, handVal, discard)
 			break
 		elif choice == 'su':
-			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! The dealer had {}.".format(dVal))
+			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! Dealer had {}.".format(dVal))
 			bank -= bet/2
 			break
 		elif choice == 's':
@@ -519,7 +519,7 @@ while True:
 		continue
 
 	if handVal >= 22:
-		print("You bust! {lose} The dealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
+		print("You bust! {lose} Dealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
 		bank -= bet
 		continue
 	else:
@@ -535,7 +535,7 @@ while True:
 
 	dVal = dealer(dCard1, dCard2, dealerHand, discard)
 	if dVal >= 22 and handVal <= 21:
-		print("The dealer busts with {dealer}! {win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
+		print("Dealer busts with {dealer}! {win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
 		if choice == 'dd':
 			bank += bet*2
 		elif choice == 'sp':
