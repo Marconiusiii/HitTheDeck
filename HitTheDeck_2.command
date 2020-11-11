@@ -221,6 +221,10 @@ def split(playerHand, discard):
 				handSP1[2] = 1
 				handSP1.append(spH1)
 				hand1 = handCount(handSP1)
+			elif len(handSP1) > 2 and handSP1[0] == 11 and hand1 + spH1 > 21:
+				handSP1[0] = 1
+				handSP1.append(spH1)
+				hand1 = handCount(handSP1)
 			else:
 				handSP1.append(spH1)
 				hand1 = handCount(handSP1)
@@ -283,6 +287,10 @@ def split(playerHand, discard):
 				hand2 = handCount(handSP2)
 			elif len(handSP2) > 2 and  handSP2[2] == 11 and handSP2 + spH2 > 21:
 				handSP2[2] = 1
+				handSP2.append(spH2)
+				hand2 = handCount(handSP2)
+			elif len(handSP2) > 2 and  handSP2[0] == 11 and handSP2 + spH2 > 21:
+				handSP2[0] = 1
 				handSP2.append(spH2)
 				hand2 = handCount(handSP2)
 			else:
