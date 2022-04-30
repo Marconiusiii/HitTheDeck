@@ -1,6 +1,20 @@
-input#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import random
+
+# Version Number
+version = "3.5"
+
+def quitGame():
+	global bank, initBank
+	if bank > initBank:
+		print("\nNice work coloring up! Come back soon!\n")
+	elif bank == initBank:
+		print("\nWell, at least you didn't lose anything! Try again soon!\n")
+	else:
+		print("\nOops, tough loss today. Better luck next time!\n")
+	raise SystemExit
+
 def clearScreen():
 	os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -35,7 +49,6 @@ def deckGenerator():
 
 # Hand Count function
 
-
 def handCount(hand):
 	count = 0
 	for i in hand:
@@ -44,11 +57,6 @@ def handCount(hand):
 
 # Draw function
 def draw(deck, deckAmount):
-#	if len(deck) <= 10:
-#		deck = deckGenerator()
-#		del discard[:]
-#		print("Shuffling the deck!")
-
 	if deckAmount == 1:
 		card, cardVal = random.choice(list(deck.items()))
 		del deck[card]
@@ -63,14 +71,124 @@ def draw(deck, deckAmount):
 				break
 	return card, cardVal
 
-win = ["Alright alright alright!", "That's what I'm talkin' about!", "Money money money!", "Schweeeet!", "Winner winner, chicken dinner!", "We have a winner!", "Quite nice, that.", "Very good!", "Most excellent!", "You punched that dealer right in the face!", "Do the thing! Score the money units!", "Hot damn!", "You're on fire!", "Bingo! Wait, wrong game...", "Yahtzee! Oh, wrong game...", "So much win!", "Way to go!", "Hooray!", "Awesome.", "Sweet!", "That's some fine card sharkin' right there, I tell you what!", "Woohoo!", "You win all the things!", "Look out, the pit boss is watching!", "Rock on!", "The win is strong with this one.", "Yeehaw!", "Full of win!", "Nice, good one.", "That's the way to do it!", "Yes! Keep it up!", "You are totally ready for Vegas!", "So amaze!", "Positive reinforcement!", "There you go!", "That'll do.", "Someone call the cops! You just committed grand larceny!", "Awwww Yiss!", "Awesomesauce!", "Someone get some salsa for all these chips you have!"]
+cardCount = 0
+countActual = 0
+def counter(card):
+	global cardCount, deck, countActual
+	if card in range(2,7):
+		cardCount += 1
+	elif card >= 10:
+		cardCount -= 1
+	if len(deck) >= 260:
+		trueCount = 6
+	elif 208 <= len(deck) < 260:
+		trueCount = 5
+	elif 156 <= len(deck) < 208:
+		trueCount = 4
+	elif 104 <= len(deck) < 156:
+		trueCount = 3
+	elif 52 <= len(deck) < 104:
+		trueCount = 2
+	elif len(deck) < 52:
+		trueCount = 1
+	countActual = cardCount // trueCount
 
-lose = ["What in the ass?", "You just got F'd in the A!", "Dammit, dammit, dammit!",  "Aww shucks.", "Crap!", "Total bollocks, that.", "Hey, wha' happened?", "Rat farts!", "Total balls.", "Oh biscuits!", "Oh applesauce!", "That...that was not good.", "Do or do not. There is no try!", "Ouch, not pleasant.", "Fiddlesticks!", "You were eaten by a Gru.", "Your card skills are lacking.", "Fanned on that one...", "Robbed!", "Ah shit.", "Damn, too bad.", "Frak!", "Oh no!", "You are doing it wrong!", "Oops, that's a loss.", "So much for your retirement.", "So much for college tuition.", "Hey, at least the drinks are free.", "Better luck next hand!", "Your chips are getting low.", "Aack, not good!", "That's unfortunate.", "Sorry, you lost.", "Loser!", "That's a loser!", "Who shuffled this deck?", "Who cut this round?", "This dealer is totally cheating.", "At least you get free table massages.", "That's not what I meant when I said I like big busts!", "Try again.", "Noooooooooo!", "All your chips are belong to us!", "You should probably go play Craps now."]
+# Winning Calls
+win = [
+"Alright alright alright!",
+"That's what I'm talkin' about!",
+"Money money money!",
+"Schweeeet!",
+"Winner winner, chicken dinner!",
+"We have a winner!",
+"Quite nice, that.",
+"Very good!",
+"Most excellent!",
+"You punched that dealer right in the face!",
+"Do the thing! Score the money units!",
+"Hot damn!",
+"You're on fire!",
+"Bingo! Wait, wrong game...",
+"Yahtzee! Oh, wrong game...",
+"So much win!",
+"Way to go!",
+"Hooray!",
+"Awesome.",
+"Sweet!",
+"That's some fine card sharkin' right there, I tell you what!",
+"Woohoo!",
+"You win all the things!",
+"Look out, the pit boss is watching!",
+"Rock on!",
+"The win is strong with this one.",
+"Yeehaw!",
+"Full of win!",
+"Nice, good one.",
+"That's the way to do it!",
+"Yes! Keep it up!",
+"You are totally ready for Vegas!",
+"So amaze!",
+"Positive reinforcement!",
+"There you go!",
+"That'll do.",
+"Someone call the cops! You just committed grand larceny!",
+"Awwww Yiss!",
+"Awesomesauce!",
+"Someone get some salsa for all these chips you have!",
+"Hooty Hoo!"
+]
+
+lose = [
+"What in the ass?",
+"You just got F'd in the A!",
+"Dammit, dammit, dammit!",
+ "Aww shucks.",
+"Crap!",
+"Total bollocks, that.",
+"Hey, wha' happened?",
+"Rat farts!",
+"Total balls.",
+"Oh biscuits!",
+"Oh applesauce!",
+"That...that was not good.",
+"Do or do not. There is no try!",
+"Ouch, not pleasant.",
+"Fiddlesticks!",
+"You were eaten by a Gru.",
+"Your card skills are lacking.",
+"Fanned on that one...",
+"Robbed!",
+"Ah shit.",
+"Damn, too bad.",
+"Frak!",
+"Oh no!",
+"You are doing it wrong!",
+"Oops, that's a loss.",
+"So much for your retirement.","So much for college tuition.",
+"Hey, at least the drinks are free.",
+"Better luck next hand!",
+"Your chips are getting low.",
+"Aack, not good!",
+"That's unfortunate.",
+"Sorry, you lost.",
+"Loser!",
+"That's a loser!",
+"Who shuffled this deck?",
+"Who cut this round?",
+"This dealer is totally cheating.",
+"At least you get free table massages.",
+"That's not what I meant when I said I like big busts!",
+"Try again.",
+"Noooooooooo!",
+"All your chips are belong to us!",
+"You should probably go play Craps now."
+]
 
 # Hit function
 def hit(playerHand, handVal, discard):
 	while True:
 		cardHit, z = draw(deck, deckAmount)
+		counter(z)
 		if z == 1 and handVal + 11 <= 21:
 			z = 11
 			playerHand.append(z)
@@ -98,6 +216,7 @@ def hit(playerHand, handVal, discard):
 			break
 		else:
 			pass
+		#print("True Count: {}".format(countActual))
 		print("Hit(h) or Stand(s)?")
 		hitAgain = input(">")
 		if hitAgain == 'h':
@@ -110,6 +229,7 @@ def hit(playerHand, handVal, discard):
 #Double Down function
 def doubleDown(playerHand, handVal, discard):
 	ddCard, dd = draw(deck, deckAmount)
+	counter(dd)
 	if dd == 1 and handVal + 11 <= 21:
 		dd = 11
 		playerHand.append(dd)
@@ -145,6 +265,7 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 	if dVal < 17:
 		while True:
 			dHit, dh1 = draw(deck, deckAmount)
+			counter(dh1)
 			if dh1 == 1 and dVal + 11 <= 21:
 				dh1 = 11
 				dealerHand.append(dh1)
@@ -182,6 +303,8 @@ def split(playerHand, discard):
 	betDouble2 = 0
 	spCard1, sp1 = draw(deck, deckAmount)
 	spCard2, sp2 = draw(deck, deckAmount)
+	counter(sp1)
+	counter(sp2)
 	if playerHand[0] == 11:
 		playerHand[0] = 11
 		playerHand[1] = 11
@@ -205,6 +328,7 @@ def split(playerHand, discard):
 	if h1 == 'h':
 		while True:
 			handHit1, spH1 = draw(deck, deckAmount)
+			counter(spH1)
 			if spH1 == 1 and hand1 + 11 <= 21:
 				spH1 = 11
 				handSP1.append(spH1)
@@ -244,6 +368,7 @@ def split(playerHand, discard):
 	elif h1 == 'dd':
 		betDouble1 += 1
 		ddHand1, ddH1 = draw(deck, deckAmount)
+		counter(ddH1)
 		if ddH1 == 1 and hand1 + 11 <= 21:
 			ddH1 = 11
 			handSP1.append(ddH1)
@@ -273,6 +398,7 @@ def split(playerHand, discard):
 	if h2 == 'h':
 		while True:
 			handHit2, spH2 = draw(deck, deckAmount)
+			counter(spH2)
 			if spH2 == 1 and hand2 + 11 <= 21:
 				spH2 = 11
 				handSP2.append(spH2)
@@ -312,6 +438,7 @@ def split(playerHand, discard):
 	elif h2 == 'dd':
 		betDouble2 += 1
 		ddHand2, ddH2 = draw(deck, deckAmount)
+		counter(ddH2)
 		if ddH2 == 1 and hand2 + 11 <= 21:
 			ddH2 = 11
 			handSP2.append(ddH2)
@@ -339,10 +466,10 @@ def split(playerHand, discard):
 	return [hand1, hand2, betDouble1, betDouble2]
 
 bet = 0
-bank = 0
+bank = initBank = 0
 
 # Game starts here
-print("Hit the Deck! v.3.0\n\t\tBy: Marco Salsiccia")
+print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
 print("How much would you like to cash in for your bank?")
 while True:
 	try:
@@ -353,6 +480,7 @@ while True:
 		continue
 print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
 gameLoops = 0
+initBank = bank
 
 #Decks and Shuffle
 while True:
@@ -409,11 +537,12 @@ while True:
 		pass
 
 # Betting
+	##print("True Count: {}".format(countActual))
 
 	if bet == 0:
-		print("You have ${} left in your bank. How much would you like to bet?".format(bank))
+		print("You have ${} in your bank. How much would you like to bet?".format(bank))
 	else:
-		print("You have ${bank} left in your bank. How much would you like to bet? Hit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
+		print("You have ${bank} in your bank. How much would you like to bet?\nHit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
 	try:
 		bet = int(input("$?"))
 	except ValueError:
@@ -433,12 +562,16 @@ while True:
 		deck = deckGenerator()
 		del discard[:]
 		print("\nShuffling!\n")
-
+		countActual = 0
 	card1, x = draw(deck, deckAmount)
 	card2, y = draw(deck, deckAmount)
+	counter(x)
+	counter(y)
 
 	dCard1, d1 =draw(deck, deckAmount)
 	dCard2, d2 = draw(deck, deckAmount)
+	counter(d1)
+	counter(d2)
 	dealerHand = [d1, d2]
 	dVal = handCount(dealerHand)
 
@@ -456,7 +589,7 @@ while True:
 	playerHand = [x, y]
 	handVal = handCount(playerHand)
 	if handVal == 21:
-		print("Blackjack! {win} You drew the {card1} and the {card2} and have shamed the Dealer! ${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
+		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
 		bank += bet//2 * 3
 		continue
 	else:
@@ -480,7 +613,7 @@ while True:
 		else:
 			print("You decline insurance and Dealer checks their cards...")
 			if d1 == 10:
-				print("They have 21! {}".format(lose[random.randint(0, len(lose)-1)]))
+				print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
 				bank -= bet
 				continue
 			else:
@@ -491,14 +624,16 @@ while True:
 
 	while True:
 		if card1StrA == card2StrA:
-			print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?")
-			choice = input("h, sp, dd, su,  s >")
+			print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
+			choice = input(">  ")
 		else:
-			print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?")
-			choice = input("h, dd, su,  s >")
+			print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
+			choice = input(">  ")
 		if choice == 'h' or choice == 'H':
 			handVal = hit(playerHand, handVal, discard)
 			break
+		elif choice.lower() == "x":
+			quitGame()
 		elif card1StrA == card2StrA and choice == 'sp':
 			if bank - bet*2 <= 0:
 				print("You don't have enough chips for that! Try hitting instead, you silly goose!")
@@ -514,7 +649,7 @@ while True:
 			handVal = doubleDown(playerHand, handVal, discard)
 			break
 		elif choice == 'su':
-			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! Dealer had {}.".format(dVal))
+			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(dVal))
 			bank -= bet/2
 			break
 		elif choice == 's':
@@ -527,7 +662,7 @@ while True:
 		continue
 
 	if handVal >= 22:
-		print("You bust! {lose} Dealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
+		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
 		bank -= bet
 		continue
 	else:
@@ -543,7 +678,7 @@ while True:
 
 	dVal = dealer(dCard1, dCard2, dealerHand, discard)
 	if dVal >= 22 and handVal <= 21:
-		print("Dealer busts with {dealer}! {win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
+		print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
 		if choice == 'dd':
 			bank += bet*2
 		elif choice == 'sp':
