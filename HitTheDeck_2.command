@@ -636,7 +636,7 @@ while True:
 			quitGame()
 		elif card1StrA == card2StrA and choice == 'sp':
 			if bank - bet*2 <= 0:
-				print("You don't have enough chips for that! Try hitting instead, you silly goose!")
+				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, discard)
 			else:
 				handsplit = split(playerHand, discard)
