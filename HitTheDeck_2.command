@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+
 import os
 import random
 
 # Version Number
-version = "3.5"
+version = "4.0"
 
 def quitGame():
 	global bank, initBank
@@ -17,6 +18,8 @@ def quitGame():
 
 def clearScreen():
 	os.system('cls' if os.name == 'nt' else 'clear')
+
+# Deck and Card Setup
 
 deck = {}
 discard = []
@@ -38,6 +41,7 @@ cardValues = {
 'Queen': 10,
 'King': 10
 }
+
 # Deck Generation
 
 def deckGenerator():
@@ -56,7 +60,9 @@ def handCount(hand):
 	return count
 
 # Draw function
-def draw(deck, deckAmount):
+
+def draw():
+	global deck, deckAmount
 	if deckAmount == 1:
 		card, cardVal = random.choice(list(deck.items()))
 		del deck[card]
@@ -94,6 +100,7 @@ def counter(card):
 	countActual = cardCount // trueCount
 
 # Winning Calls
+
 win = [
 "Alright alright alright!",
 "That's what I'm talkin' about!",
@@ -135,7 +142,8 @@ win = [
 "Awwww Yiss!",
 "Awesomesauce!",
 "Someone get some salsa for all these chips you have!",
-"Hooty Hoo!"
+"Hooty Hoo!",
+"Loud! Noises!"
 ]
 
 lose = [
@@ -187,26 +195,26 @@ lose = [
 # Hit function
 def hit(playerHand, handVal, discard):
 	while True:
-		cardHit, z = draw(deck, deckAmount)
-		counter(z)
-		if z == 1 and handVal + 11 <= 21:
-			z = 11
-			playerHand.append(z)
+		cardHit, cardHitVal = draw()
+		counter(cardHitVal)
+		if cardHitVal == 1 and handVal + 11 <= 21:
+			cardHitVal = 11
+			playerHand.append(cardHitVal)
 			handVal = handCount(playerHand)
-		elif playerHand[0] == 11 and handVal + z > 21:
+		elif playerHand[0] == 11 and handVal + cardHitVal > 21:
 			playerHand[0] = 1
-			playerHand.append(z)
+			playerHand.append(cardHitVal)
 			handVal = handCount(playerHand)
-		elif playerHand[1] == 11 and handVal + z > 21:
+		elif playerHand[1] == 11 and handVal + cardHitVal > 21:
 			playerHand[1] = 1
-			playerHand.append(z)
+			playerHand.append(cardHitVal)
 			handVal = handCount(playerHand)
-		elif len(playerHand) > 2 and  playerHand[2] == 11 and handVal + z > 21:
+		elif len(playerHand) > 2 and  playerHand[2] == 11 and handVal + cardHitVal > 21:
 			playerHand[2] = 1
-			playerHand.append(z)
+			playerHand.append(cardHitVal)
 			handVal = handCount(playerHand)
 		else:
-			playerHand.append(z)
+			playerHand.append(cardHitVal)
 			handVal = handCount(playerHand)
 		print("You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal))
 		if handVal >= 22:
@@ -214,8 +222,6 @@ def hit(playerHand, handVal, discard):
 		elif handVal == 21:
 			print("Sanding on 21, stop hitting me!")
 			break
-		else:
-			pass
 		#print("True Count: {}".format(countActual))
 		print("Hit(h) or Stand(s)?")
 		hitAgain = input(">")
@@ -228,7 +234,7 @@ def hit(playerHand, handVal, discard):
 
 #Double Down function
 def doubleDown(playerHand, handVal, discard):
-	ddCard, dd = draw(deck, deckAmount)
+	ddCard, dd = draw()
 	counter(dd)
 	if dd == 1 and handVal + 11 <= 21:
 		dd = 11
@@ -264,7 +270,7 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
 	if dVal < 17:
 		while True:
-			dHit, dh1 = draw(deck, deckAmount)
+			dHit, dh1 = draw()
 			counter(dh1)
 			if dh1 == 1 and dVal + 11 <= 21:
 				dh1 = 11
@@ -301,8 +307,8 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 def split(playerHand, discard):
 	betDouble1 = 0
 	betDouble2 = 0
-	spCard1, sp1 = draw(deck, deckAmount)
-	spCard2, sp2 = draw(deck, deckAmount)
+	spCard1, sp1 = draw()
+	spCard2, sp2 = draw()
 	counter(sp1)
 	counter(sp2)
 	if playerHand[0] == 11:
@@ -327,7 +333,7 @@ def split(playerHand, discard):
 	h1 = input(">")
 	if h1 == 'h':
 		while True:
-			handHit1, spH1 = draw(deck, deckAmount)
+			handHit1, spH1 = draw()
 			counter(spH1)
 			if spH1 == 1 and hand1 + 11 <= 21:
 				spH1 = 11
@@ -367,7 +373,7 @@ def split(playerHand, discard):
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
-		ddHand1, ddH1 = draw(deck, deckAmount)
+		ddHand1, ddH1 = draw()
 		counter(ddH1)
 		if ddH1 == 1 and hand1 + 11 <= 21:
 			ddH1 = 11
@@ -397,7 +403,7 @@ def split(playerHand, discard):
 	h2 = input(">")
 	if h2 == 'h':
 		while True:
-			handHit2, spH2 = draw(deck, deckAmount)
+			handHit2, spH2 = draw()
 			counter(spH2)
 			if spH2 == 1 and hand2 + 11 <= 21:
 				spH2 = 11
@@ -437,7 +443,7 @@ def split(playerHand, discard):
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
-		ddHand2, ddH2 = draw(deck, deckAmount)
+		ddHand2, ddH2 = draw()
 		counter(ddH2)
 		if ddH2 == 1 and hand2 + 11 <= 21:
 			ddH2 = 11
@@ -563,13 +569,13 @@ while True:
 		del discard[:]
 		print("\nShuffling!\n")
 		countActual = 0
-	card1, x = draw(deck, deckAmount)
-	card2, y = draw(deck, deckAmount)
+	card1, x = draw()
+	card2, y = draw()
 	counter(x)
 	counter(y)
 
-	dCard1, d1 =draw(deck, deckAmount)
-	dCard2, d2 = draw(deck, deckAmount)
+	dCard1, d1 =draw()
+	dCard2, d2 = draw()
 	counter(d1)
 	counter(d2)
 	dealerHand = [d1, d2]
