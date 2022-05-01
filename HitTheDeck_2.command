@@ -304,9 +304,9 @@ def dealer(dCard1, dCard2, dealerHand, discard):
 	return dVal
 
 # Split function
-def split(playerHand, discard):
-	betDouble1 = 0
-	betDouble2 = 0
+def split():
+	global playerHand, discard
+	betDouble1 = betDouble2 = 0
 	spCard1, sp1 = draw()
 	spCard2, sp2 = draw()
 	counter(sp1)
@@ -645,7 +645,7 @@ while True:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, discard)
 			else:
-				handsplit = split(playerHand, discard)
+				handsplit = split()
 			break
 		elif card1StrA != card2StrA and choice == 'sp':
 			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
