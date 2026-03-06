@@ -5,7 +5,7 @@ import random
 from engine import addCard, canSplitCards, deckGenerator, handValue, isBlackjack
 
 # Version Number
-version = "4.0"
+version = "5.0.0"
 
 def quitGame():
 	global bank, initBank
