@@ -441,6 +441,7 @@ while True:
 		del discard[:]
 		print("\nShuffling!\n")
 		countActual = 0
+	charlie_paid = False
 	card1, x = draw()
 	card2, y = draw()
 	counter(x)
@@ -546,7 +547,7 @@ while True:
 		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
 		bank += bet
 		print("You now have ${} in your bank!".format(bank))
-		continue
+		charlie_paid = True
 
 # Dealer phase
 
@@ -616,6 +617,8 @@ while True:
 		print("It's a push!")
 	else:
 		print(win[random.randint(0, len(win)-1)])
+		if charlie_paid:
+			continue
 		if choice == 'dd':
 			bank += bet*2
 		else:
