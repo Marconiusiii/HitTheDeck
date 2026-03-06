@@ -308,6 +308,39 @@ def renderRoundEvent(event):
 		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=event["dealer_total"]))
 
 
+def renderInitialBlackjackOutcome(outcome, state, card1, card2):
+	if outcome == "push":
+		print("Push! You and the Dealer both have Blackjack.")
+		return True
+	if outcome == "player_blackjack":
+		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=state.bet//2*3))
+		state.bank += state.bet//2 * 3
+		return True
+	return False
+
+
+def promptInsuranceDecision():
+	print("Insurance?")
+	ins = input("y/n?")
+	took_insurance = ins == 'y'
+	if took_insurance:
+		print("Dealer checks their cards...")
+	else:
+		print("You decline insurance and Dealer checks their cards...")
+	return took_insurance
+
+
+def renderInsuranceResolution(result, bet):
+	if result["result"] == "insurance_win":
+		print("Dealer has 21. Insurance wins and offsets your main bet.")
+	elif result["result"] == "insurance_lose":
+		print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
+	elif result["result"] == "dealer_blackjack":
+		print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
+	else:
+		print("Dealer does not have 21! Phew, carry on.")
+
+
 def resolveDealerPhase(state, dVal):
 	resolution = resolveRound(state, dVal)
 	for event in resolution.events:
@@ -423,12 +456,7 @@ while True:
 	dVal = state.dealer_total
 	dealerBlackjack = isBlackjack(dealerHand)
 	initial_blackjack = evaluateInitialBlackjack(state.player_total, dealerHand)
-	if initial_blackjack == "push":
-		print("Push! You and the Dealer both have Blackjack.")
-		continue
-	elif initial_blackjack == "player_blackjack":
-		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
-		state.bank += bet//2 * 3
+	if renderInitialBlackjackOutcome(initial_blackjack, state, card1, card2):
 		bank = state.bank
 		continue
 
@@ -436,27 +464,13 @@ while True:
 
 	# Insurance
 	if d2 == 1:
-		print("Insurance?")
-		ins = input("y/n?")
-		took_insurance = ins == 'y'
-		if took_insurance:
-			print("Dealer checks their cards...")
-		else:
-			print("You decline insurance and Dealer checks their cards...")
+		took_insurance = promptInsuranceDecision()
 		insurance_resolution = resolveInsurance(d2, took_insurance, dealerBlackjack, bet)
 		state.bank += insurance_resolution["bank_delta"]
-		if insurance_resolution["result"] == "insurance_win":
-			bank = state.bank
-			print("Dealer has 21. Insurance wins and offsets your main bet.")
-			continue
-		elif insurance_resolution["result"] == "insurance_lose":
-			print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
-		elif insurance_resolution["result"] == "dealer_blackjack":
-			print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
+		renderInsuranceResolution(insurance_resolution, bet)
+		if insurance_resolution["round_over"]:
 			bank = state.bank
 			continue
-		else:
-			print("Dealer does not have 21! Phew, carry on.")
 	else:
 		dealer_resolution = resolveInsurance(d2, False, dealerBlackjack, bet)
 		if dealer_resolution["round_over"]:
