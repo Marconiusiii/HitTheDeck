@@ -387,6 +387,22 @@ def resolveDealerPhase(state, dVal):
 	state.bank += resolution.bankDelta
 	return state
 
+def resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe):
+	turnOut = evalTurnOut(state, dVal)
+	if turnOut["roundOver"]:
+		renderRoundEvent(turnOut["event"])
+		if turnOut["event"]["code"] == "playerBust":
+			state.bank -= bet
+		return state
+	if len(playerHand) >= 5:
+		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
+		state.bank += bet
+		print("You now have ${} in your bank!".format(state.bank))
+		state.charliePaid = True
+	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
+	state.dealerTotal = dVal
+	return resolveDealerPhase(state, dVal)
+
 bet = 0
 bank = initBank = 0
 
@@ -521,28 +537,9 @@ while True:
 			bank = state.bank
 			continue
 
-	# Split Check
-	canSplit = canSplitCards(card1, card2)
-	state = resolvePlayerTurn(canSplit, state, dVal, shoe)
-	turnOut = evalTurnOut(state, dVal)
-	if turnOut["roundOver"]:
-		renderRoundEvent(turnOut["event"])
-		if turnOut["event"]["code"] == "playerBust":
-			state.bank -= bet
+		# Split Check
+		canSplit = canSplitCards(card1, card2)
+		state = resolvePlayerTurn(canSplit, state, dVal, shoe)
+		state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
 		bank = state.bank
 		continue
-
-	# 5 card Charlie
-	if len(playerHand) >= 5:
-		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
-		state.bank += bet
-		print("You now have ${} in your bank!".format(state.bank))
-		state.charliePaid = True
-
-	# Dealer phase
-
-	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	state.dealerTotal = dVal
-	state = resolveDealerPhase(state, dVal)
-	bank = state.bank
-	continue
