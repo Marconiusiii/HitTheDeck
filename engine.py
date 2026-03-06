@@ -159,6 +159,39 @@ def startSplitHands(shoe, player_hand):
 	}
 
 
+def resolveSplitHandIntent(choice, shoe, hand, current_total):
+	intent = choice.lower()
+	result = {
+		"intent": intent,
+		"total": current_total,
+		"doubled": False,
+		"draw_card": None,
+		"bust": False,
+		"complete": False,
+		"invalid": False,
+	}
+	if intent == "h":
+		step = playerHitStep(shoe, hand)
+		result["total"] = step["total"]
+		result["draw_card"] = step["card_name"]
+		result["bust"] = step["bust"]
+		result["complete"] = step["bust"]
+		return result
+	if intent == "dd":
+		step = playerDoubleDownStep(shoe, hand)
+		result["total"] = step["total"]
+		result["draw_card"] = step["card_name"]
+		result["bust"] = step["bust"]
+		result["doubled"] = True
+		result["complete"] = True
+		return result
+	if intent == "s":
+		result["complete"] = True
+		return result
+	result["invalid"] = True
+	return result
+
+
 def evaluateInitialBlackjack(player_total, dealer_raw_cards):
 	player_blackjack = player_total == 21
 	dealer_blackjack = isBlackjack(dealer_raw_cards)

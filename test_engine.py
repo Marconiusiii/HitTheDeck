@@ -7,7 +7,7 @@ from engine import canSplitCards, compareHandTotals, dealRound
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evaluatePlayerTurnOutcome, resolveInsurance, resolveRound
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, settleSplitHand
-from engine import startHand, startSplitHands
+from engine import resolveSplitHandIntent, startHand, startSplitHands
 
 
 class EngineTests(unittest.TestCase):
@@ -203,6 +203,27 @@ class EngineTests(unittest.TestCase):
 		self.assertIn("second_draw_card", result)
 		self.assertEqual(len(result["hand1"]), 2)
 		self.assertEqual(len(result["hand2"]), 2)
+
+	def test_resolve_split_hand_intent(self):
+		shoe = Shoe(1)
+		hand = [8, 8]
+		current_total = 16
+		result = resolveSplitHandIntent("h", shoe, hand, current_total)
+		self.assertEqual(result["intent"], "h")
+		self.assertIn("total", result)
+		self.assertFalse(result["invalid"])
+
+		result = resolveSplitHandIntent("dd", shoe, hand, result["total"])
+		self.assertEqual(result["intent"], "dd")
+		self.assertTrue(result["doubled"])
+		self.assertTrue(result["complete"])
+
+		result = resolveSplitHandIntent("s", shoe, hand, result["total"])
+		self.assertEqual(result["intent"], "s")
+		self.assertTrue(result["complete"])
+
+		result = resolveSplitHandIntent("bad", shoe, hand, result["total"])
+		self.assertTrue(result["invalid"])
 
 
 if __name__ == "__main__":

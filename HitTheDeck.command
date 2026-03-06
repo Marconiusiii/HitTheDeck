@@ -6,6 +6,7 @@ from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBla
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evaluatePlayerTurnOutcome
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
+from engine import resolveSplitHandIntent
 
 # Version Number
 version = "5.0.0"
@@ -170,69 +171,57 @@ def split(playerHand, shoe):
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = input(">")
-	if h1 == 'h':
-		while True:
-			step = playerHitStep(shoe, handSP1)
-			hand1 = step["total"]
-			print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=hand1))
-			if hand1 >= 22:
+	while True:
+		result1 = resolveSplitHandIntent(h1, shoe, handSP1, hand1)
+		hand1 = result1["total"]
+		if result1["invalid"]:
+			break
+		if result1["intent"] == "h":
+			print("You drew the {card} and now have {hand}.".format(card=result1["draw_card"], hand=hand1))
+			if result1["bust"]:
 				print("You bust on your first hand with {}!.".format(hand1))
 				break
-			else:
-				pass
 			print("Hit(h) or Stand(s)?")
-			h1Again = input(">")
-			if h1Again == 'h':
-				continue
+			h1 = input(">")
+			continue
+		if result1["intent"] == "dd":
+			betDouble1 += 1
+			if result1["bust"]:
+				print("You drew the {card} and bust with {hand}!".format(card=result1["draw_card"], hand=hand1))
 			else:
-				print("You stand with {} on your first hand.".format(hand1))
-				break
-	elif h1 == 'dd':
-		betDouble1 += 1
-		step = playerDoubleDownStep(shoe, handSP1)
-		ddHand1 = step["card_name"]
-		hand1 = step["total"]
-		if hand1 > 21:
-			print("You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1))
-		else:
-			print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=ddHand1, hand=hand1))
-	elif h1 == 's':
-		print("You stand on your first hand with {}.".format(hand1))
-	else:
-		pass
+				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=result1["draw_card"], hand=hand1))
+			break
+		if result1["intent"] == "s":
+			print("You stand on your first hand with {}.".format(hand1))
+			break
+		break
 	print("You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2))
 	print("Hit, Double Down, or stand?")
 	h2 = input(">")
-	if h2 == 'h':
-		while True:
-			step = playerHitStep(shoe, handSP2)
-			hand2 = step["total"]
-			print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=hand2))
-			if hand2 >= 22:
+	while True:
+		result2 = resolveSplitHandIntent(h2, shoe, handSP2, hand2)
+		hand2 = result2["total"]
+		if result2["invalid"]:
+			break
+		if result2["intent"] == "h":
+			print("You drew the {card} and now have {hand}.".format(card=result2["draw_card"], hand=hand2))
+			if result2["bust"]:
 				print("You bust on your second hand with {}!.".format(hand2))
 				break
-			else:
-				pass
 			print("Hit(h) or Stand(s)?")
-			h2Again = input(">")
-			if h2Again == 'h':
-				continue
+			h2 = input(">")
+			continue
+		if result2["intent"] == "dd":
+			betDouble2 += 1
+			if result2["bust"]:
+				print("You drew the {card} and bust with {hand}!".format(card=result2["draw_card"], hand=hand2))
 			else:
-				print("You stand with {} on your second hand.".format(hand2))
-				break
-	elif h2 == 'dd':
-		betDouble2 += 1
-		step = playerDoubleDownStep(shoe, handSP2)
-		ddHand2 = step["card_name"]
-		hand2 = step["total"]
-		if hand2 > 21:
-			print("You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2))
-		else:
-			print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=ddHand2, hand=hand2))
-	elif h2 == 's':
-		print("You stand on your second hand with a total of {}.".format(hand2))
-	else:
-		pass
+				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=result2["draw_card"], hand=hand2))
+			break
+		if result2["intent"] == "s":
+			print("You stand on your second hand with a total of {}.".format(hand2))
+			break
+		break
 
 	return [hand1, hand2, betDouble1, betDouble2]
 
