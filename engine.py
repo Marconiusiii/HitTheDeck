@@ -93,6 +93,18 @@ def settleSplitHand(hand_total, dealer_total, bet, doubled=False):
 	return outcome, delta
 
 
+def startHand(card_a_value, card_b_value):
+	hand = [11 if card_a_value == 1 else card_a_value, 11 if card_b_value == 1 else card_b_value]
+	return hand, handValue(hand)
+
+
+def drawCardToHand(shoe, hand):
+	card_name, card_value = shoe.draw()
+	shoe.counter(card_value)
+	total = addCard(hand, card_value)
+	return card_name, card_value, total
+
+
 class Shoe:
 	def __init__(self, deck_amount):
 		self.deck_amount = deck_amount

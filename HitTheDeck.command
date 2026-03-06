@@ -2,8 +2,9 @@
 
 import os
 import random
-from engine import Shoe, addCard, canSplitCards, handValue, isBlackjack
+from engine import Shoe, canSplitCards, handValue, isBlackjack
 from engine import bankrollDelta, compareHandTotals, settleSplitHand
+from engine import drawCardToHand, startHand
 
 # Version Number
 version = "5.0.0"
@@ -117,9 +118,7 @@ lose = [
 # Hit function
 def hit(playerHand, handVal, shoe):
 	while True:
-		cardHit, cardHitVal = shoe.draw()
-		shoe.counter(cardHitVal)
-		handVal = addCard(playerHand, cardHitVal)
+		cardHit, cardHitVal, handVal = drawCardToHand(shoe, playerHand)
 		print("You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal))
 		if handVal >= 22:
 			break
@@ -138,9 +137,7 @@ def hit(playerHand, handVal, shoe):
 
 #Double Down function
 def doubleDown(playerHand, handVal, shoe):
-	ddCard, dd = shoe.draw()
-	shoe.counter(dd)
-	handVal = addCard(playerHand, dd)
+	ddCard, dd, handVal = drawCardToHand(shoe, playerHand)
 	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=ddCard, hand=handVal))
 	return handVal
 
@@ -151,9 +148,7 @@ def dealer(dCard1, dCard2, dealerHand, shoe):
 	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
 	if dVal < 17:
 		while True:
-			dHit, dh1 = shoe.draw()
-			shoe.counter(dh1)
-			dVal = addCard(dealerHand, dh1)
+			dHit, dh1, dVal = drawCardToHand(shoe, dealerHand)
 			print("Dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
 			if dVal <= 16:
 				continue
@@ -167,26 +162,18 @@ def dealer(dCard1, dCard2, dealerHand, shoe):
 	return dVal
 
 # Split function
-def split():
-	global playerHand, shoe
+def split(playerHand, shoe):
 	betDouble1 = betDouble2 = 0
-	spCard1, sp1 = shoe.draw()
-	spCard2, sp2 = shoe.draw()
-	shoe.counter(sp1)
-	shoe.counter(sp2)
-	handSP1 = [11 if sp1 == 1 else sp1, playerHand[0]]
-	hand1 = handValue(handSP1)
-
-	handSP2 = [11 if sp2 == 1 else sp2, playerHand[1]]
-	hand2 = handValue(handSP2)
+	spCard1, sp1, _ = drawCardToHand(shoe, [])
+	spCard2, sp2, _ = drawCardToHand(shoe, [])
+	handSP1, hand1 = startHand(sp1, playerHand[0])
+	handSP2, hand2 = startHand(sp2, playerHand[1])
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = input(">")
 	if h1 == 'h':
 		while True:
-			handHit1, spH1 = shoe.draw()
-			shoe.counter(spH1)
-			hand1 = addCard(handSP1, spH1)
+			handHit1, spH1, hand1 = drawCardToHand(shoe, handSP1)
 			print("You drew the {card} and now have {hand}.".format(card=handHit1, hand=hand1))
 			if hand1 >= 22:
 				print("You bust on your first hand with {}!.".format(hand1))
@@ -202,9 +189,7 @@ def split():
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
-		ddHand1, ddH1 = shoe.draw()
-		shoe.counter(ddH1)
-		hand1 = addCard(handSP1, ddH1)
+		ddHand1, ddH1, hand1 = drawCardToHand(shoe, handSP1)
 		if hand1 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1))
 		else:
@@ -218,9 +203,7 @@ def split():
 	h2 = input(">")
 	if h2 == 'h':
 		while True:
-			handHit2, spH2 = shoe.draw()
-			shoe.counter(spH2)
-			hand2 = addCard(handSP2, spH2)
+			handHit2, spH2, hand2 = drawCardToHand(shoe, handSP2)
 			print("You drew the {card} and now have {hand}.".format(card=handHit2, hand=hand2))
 			if hand2 >= 22:
 				print("You bust on your second hand with {}!.".format(hand2))
@@ -236,9 +219,7 @@ def split():
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
-		ddHand2, ddH2 = shoe.draw()
-		shoe.counter(ddH2)
-		hand2 = addCard(handSP2, ddH2)
+		ddHand2, ddH2, hand2 = drawCardToHand(shoe, handSP2)
 		if hand2 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2))
 		else:
@@ -360,8 +341,7 @@ while True:
 	dealerHand = [d1, d2]
 	dVal = handValue([11 if card == 1 else card for card in dealerHand])
 
-	playerHand = [11 if x == 1 else x, 11 if y == 1 else y]
-	handVal = handValue(playerHand)
+	playerHand, handVal = startHand(x, y)
 	playerBlackjack = handVal == 21
 	dealerBlackjack = isBlackjack(dealerHand)
 
@@ -420,7 +400,7 @@ while True:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, shoe)
 			else:
-				handsplit = split()
+				handsplit = split(playerHand, shoe)
 			break
 		elif (not can_split) and choice == 'sp':
 			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")

@@ -3,7 +3,8 @@
 import unittest
 
 from engine import Shoe, addCard, bankrollDelta, canSplitCards, compareHandTotals
-from engine import deckGenerator, handValue, isBlackjack, settleSplitHand
+from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
+from engine import settleSplitHand, startHand
 
 
 class EngineTests(unittest.TestCase):
@@ -81,6 +82,19 @@ class EngineTests(unittest.TestCase):
 		outcome, delta = settleSplitHand(16, 20, 10, doubled=True)
 		self.assertEqual(outcome, "lose")
 		self.assertEqual(delta, -20)
+
+	def test_start_hand_converts_aces(self):
+		hand, total = startHand(1, 9)
+		self.assertEqual(hand, [11, 9])
+		self.assertEqual(total, 20)
+
+	def test_draw_card_to_hand(self):
+		shoe = Shoe(1)
+		hand = [10, 6]
+		card_name, card_value, total = drawCardToHand(shoe, hand)
+		self.assertIsInstance(card_name, str)
+		self.assertIn(card_value, range(1, 11))
+		self.assertEqual(total, handValue(hand))
 
 
 if __name__ == "__main__":
