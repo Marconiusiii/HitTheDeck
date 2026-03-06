@@ -5,6 +5,7 @@ import random
 from engine import Shoe, canSplitCards, handValue, isBlackjack
 from engine import bankrollDelta, compareHandTotals, settleSplitHand
 from engine import drawCardToHand, startHand
+from engine import evaluateInitialBlackjack, resolveInsurance
 
 # Version Number
 version = "5.0.0"
@@ -427,13 +428,12 @@ while True:
 	dVal = handValue([11 if card == 1 else card for card in dealerHand])
 
 	playerHand, handVal = startHand(x, y)
-	playerBlackjack = handVal == 21
 	dealerBlackjack = isBlackjack(dealerHand)
-
-	if playerBlackjack and dealerBlackjack:
+	initial_blackjack = evaluateInitialBlackjack(handVal, dealerHand)
+	if initial_blackjack == "push":
 		print("Push! You and the Dealer both have Blackjack.")
 		continue
-	elif playerBlackjack:
+	elif initial_blackjack == "player_blackjack":
 		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
 		bank += bet//2 * 3
 		continue
@@ -444,26 +444,29 @@ while True:
 	if d2 == 1:
 		print("Insurance?")
 		ins = input("y/n?")
-		if ins == 'y':
+		took_insurance = ins == 'y'
+		if took_insurance:
 			print("Dealer checks their cards...")
-			if dealerBlackjack:
-				print("Dealer has 21. Insurance wins and offsets your main bet.")
-				continue
-			else:
-				print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
-				bank -= bet//2
 		else:
 			print("You decline insurance and Dealer checks their cards...")
-			if dealerBlackjack:
-				print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
-				bank -= bet
-				continue
-			else:
-				print("Dealer does not have 21! Phew, carry on.")
-	elif dealerBlackjack:
-		print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
-		bank -= bet
-		continue
+		insurance_resolution = resolveInsurance(d2, took_insurance, dealerBlackjack, bet)
+		bank += insurance_resolution["bank_delta"]
+		if insurance_resolution["result"] == "insurance_win":
+			print("Dealer has 21. Insurance wins and offsets your main bet.")
+			continue
+		elif insurance_resolution["result"] == "insurance_lose":
+			print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
+		elif insurance_resolution["result"] == "dealer_blackjack":
+			print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
+			continue
+		else:
+			print("Dealer does not have 21! Phew, carry on.")
+	else:
+		dealer_resolution = resolveInsurance(d2, False, dealerBlackjack, bet)
+		if dealer_resolution["round_over"]:
+			print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
+			bank += dealer_resolution["bank_delta"]
+			continue
 
 	# Split Check
 	can_split = canSplitCards(card1, card2)

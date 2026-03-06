@@ -105,6 +105,35 @@ def drawCardToHand(shoe, hand):
 	return card_name, card_value, total
 
 
+def evaluateInitialBlackjack(player_total, dealer_raw_cards):
+	player_blackjack = player_total == 21
+	dealer_blackjack = isBlackjack(dealer_raw_cards)
+	if player_blackjack and dealer_blackjack:
+		return "push"
+	if player_blackjack:
+		return "player_blackjack"
+	if dealer_blackjack:
+		return "dealer_blackjack"
+	return "none"
+
+
+def resolveInsurance(upcard_value, took_insurance, dealer_blackjack, bet):
+	if upcard_value != 1:
+		if dealer_blackjack:
+			return {"round_over": True, "bank_delta": -bet, "result": "dealer_blackjack"}
+		return {"round_over": False, "bank_delta": 0, "result": "none"}
+
+	if took_insurance:
+		if dealer_blackjack:
+			return {"round_over": True, "bank_delta": 0, "result": "insurance_win"}
+		return {"round_over": False, "bank_delta": -(bet // 2), "result": "insurance_lose"}
+
+	if dealer_blackjack:
+		return {"round_over": True, "bank_delta": -bet, "result": "dealer_blackjack"}
+
+	return {"round_over": False, "bank_delta": 0, "result": "none"}
+
+
 class Shoe:
 	def __init__(self, deck_amount):
 		self.deck_amount = deck_amount

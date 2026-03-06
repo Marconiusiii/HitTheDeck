@@ -4,7 +4,7 @@ import unittest
 
 from engine import Shoe, addCard, bankrollDelta, canSplitCards, compareHandTotals
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
-from engine import settleSplitHand, startHand
+from engine import evaluateInitialBlackjack, resolveInsurance, settleSplitHand, startHand
 
 
 class EngineTests(unittest.TestCase):
@@ -95,6 +95,28 @@ class EngineTests(unittest.TestCase):
 		self.assertIsInstance(card_name, str)
 		self.assertIn(card_value, range(1, 11))
 		self.assertEqual(total, handValue(hand))
+
+	def test_evaluate_initial_blackjack(self):
+		self.assertEqual(evaluateInitialBlackjack(21, [1, 10]), "push")
+		self.assertEqual(evaluateInitialBlackjack(21, [9, 7]), "player_blackjack")
+		self.assertEqual(evaluateInitialBlackjack(20, [1, 10]), "dealer_blackjack")
+		self.assertEqual(evaluateInitialBlackjack(20, [9, 7]), "none")
+
+	def test_resolve_insurance(self):
+		res = resolveInsurance(1, True, True, 20)
+		self.assertEqual(res["result"], "insurance_win")
+		self.assertEqual(res["bank_delta"], 0)
+		self.assertTrue(res["round_over"])
+
+		res = resolveInsurance(1, True, False, 20)
+		self.assertEqual(res["result"], "insurance_lose")
+		self.assertEqual(res["bank_delta"], -10)
+		self.assertFalse(res["round_over"])
+
+		res = resolveInsurance(1, False, True, 20)
+		self.assertEqual(res["result"], "dealer_blackjack")
+		self.assertEqual(res["bank_delta"], -20)
+		self.assertTrue(res["round_over"])
 
 
 if __name__ == "__main__":
