@@ -64,6 +64,35 @@ def canSplitCards(card1_name, card2_name):
 	return cardRank(card1_name) == cardRank(card2_name)
 
 
+def compareHandTotals(player_total, dealer_total):
+	if player_total >= 22:
+		return "lose"
+	if dealer_total >= 22:
+		return "win"
+	if player_total < dealer_total:
+		return "lose"
+	if player_total == dealer_total:
+		return "push"
+	return "win"
+
+
+def bankrollDelta(outcome, bet, doubled=False, charlie_paid=False):
+	wager = bet * 2 if doubled else bet
+	if outcome == "lose":
+		return -wager
+	if outcome == "push":
+		return 0
+	if charlie_paid:
+		return 0
+	return wager
+
+
+def settleSplitHand(hand_total, dealer_total, bet, doubled=False):
+	outcome = compareHandTotals(hand_total, dealer_total)
+	delta = bankrollDelta(outcome, bet, doubled=doubled)
+	return outcome, delta
+
+
 class Shoe:
 	def __init__(self, deck_amount):
 		self.deck_amount = deck_amount

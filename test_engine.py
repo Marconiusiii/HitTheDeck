@@ -2,7 +2,8 @@
 
 import unittest
 
-from engine import Shoe, addCard, canSplitCards, deckGenerator, handValue, isBlackjack
+from engine import Shoe, addCard, bankrollDelta, canSplitCards, compareHandTotals
+from engine import deckGenerator, handValue, isBlackjack, settleSplitHand
 
 
 class EngineTests(unittest.TestCase):
@@ -57,6 +58,29 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(shoe.discard, [])
 		self.assertEqual(shoe.card_count, 0)
 		self.assertEqual(shoe.count_actual, 0)
+
+	def test_compare_hand_totals(self):
+		self.assertEqual(compareHandTotals(18, 22), "win")
+		self.assertEqual(compareHandTotals(22, 18), "lose")
+		self.assertEqual(compareHandTotals(17, 17), "push")
+		self.assertEqual(compareHandTotals(19, 18), "win")
+		self.assertEqual(compareHandTotals(16, 20), "lose")
+
+	def test_bankroll_delta(self):
+		self.assertEqual(bankrollDelta("lose", 10), -10)
+		self.assertEqual(bankrollDelta("lose", 10, doubled=True), -20)
+		self.assertEqual(bankrollDelta("push", 10), 0)
+		self.assertEqual(bankrollDelta("win", 10), 10)
+		self.assertEqual(bankrollDelta("win", 10, doubled=True), 20)
+		self.assertEqual(bankrollDelta("win", 10, charlie_paid=True), 0)
+
+	def test_settle_split_hand(self):
+		outcome, delta = settleSplitHand(20, 18, 10, doubled=False)
+		self.assertEqual(outcome, "win")
+		self.assertEqual(delta, 10)
+		outcome, delta = settleSplitHand(16, 20, 10, doubled=True)
+		self.assertEqual(outcome, "lose")
+		self.assertEqual(delta, -20)
 
 
 if __name__ == "__main__":

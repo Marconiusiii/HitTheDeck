@@ -3,6 +3,7 @@
 import os
 import random
 from engine import Shoe, addCard, canSplitCards, handValue, isBlackjack
+from engine import bankrollDelta, compareHandTotals, settleSplitHand
 
 # Version Number
 version = "5.0.0"
@@ -453,78 +454,47 @@ while True:
 		print("You now have ${} in your bank!".format(bank))
 		charlie_paid = True
 
-# Dealer phase
+	# Dealer phase
 
 	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	if dVal >= 22 and handVal <= 21:
-		print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
-		if choice == 'dd':
-			bank += bet*2
-		elif choice == 'sp':
-			if handsplit[0] <= 21 and handsplit[1] <= 21:
-				print("Both your split hands win! ${} coming to you.".format(bet*2))
-				bank += bet*2
-				continue
-			else:
-				bank += bet
-				continue
-		else:
-			bank += bet
-		continue
-	else:
-		pass
 	if choice == 'sp' and bank - bet*2 >= 0:
 		hand1 = handsplit[0]
 		hand2 = handsplit[1]
 		betDouble1 = handsplit[2]
 		betDouble2 = handsplit[3]
-		if hand1 < dVal or hand1 >= 22:
+		outcome1, delta1 = settleSplitHand(hand1, dVal, bet, doubled=(betDouble1 == 1))
+		if outcome1 == "lose":
 			print("Your first hand loses!")
-			if betDouble1 == 1:
-				bank -= bet*2
-			else:
-				bank -= bet
-		elif hand1 == dVal:
+		elif outcome1 == "push":
 			print("Your first hand is a push!")
 		else:
 			print("You win with your first hand!")
-			if betDouble1 == 1:
-				bank += bet*2
-			else:
-				bank += bet
-		if hand2 < dVal or hand2 >= 22:
-			if betDouble2 == 1:
-				bank -= bet*2
-			else:
-				bank -= bet
+		bank += delta1
+
+		outcome2, delta2 = settleSplitHand(hand2, dVal, bet, doubled=(betDouble2 == 1))
+		if outcome2 == "lose":
 			print("Your second hand loses!")
+			bank += delta2
 			continue
-		elif hand2 == dVal:
+		elif outcome2 == "push":
 			print("Your second hand pushes!")
 			continue
 		else:
-			if betDouble2 == 1:
-				bank += bet*2
-			else:
-				bank += bet
+			bank += delta2
 			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
 			continue
-	else:
-		pass
-	if handVal < dVal:
+
+	outcome = compareHandTotals(handVal, dVal)
+	if outcome == "lose":
 		print(lose[random.randint(0, len(lose)-1)])
-		if choice == 'dd':
-			bank -= bet*2
-		else:
-			bank -= bet
-	elif handVal == dVal:
+	elif outcome == "push":
 		print("It's a push!")
 	else:
-		print(win[random.randint(0, len(win)-1)])
-		if charlie_paid:
-			continue
-		if choice == 'dd':
-			bank += bet*2
+		if dVal >= 22 and handVal <= 21:
+			print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
 		else:
-			bank += bet
+			print(win[random.randint(0, len(win)-1)])
+	bank += bankrollDelta(outcome, bet, doubled=(choice == 'dd'), charlie_paid=charlie_paid)
+	if outcome == "win" and charlie_paid:
+		continue
 	continue
