@@ -13,6 +13,18 @@ from engine import parseBankInput, parseDeckCount, startSession
 # Version Number
 version = "5.0.0"
 
+uiTxt = {
+	"hitStand": "Hit(h) or Stand(s)?",
+	"cantDo": "You can't do that!",
+	"splitBlk": "You can't split those cards! Splitting wasn't even an option, you sneaky bastard!",
+	"noFundsSplit": "You don't have enough chips for that!\nTry hitting instead, you silly goose!",
+	"outMoney1": "You are totally out of money!",
+	"outMoney2": "Add more to your bank or type q to exit the game, walking away with a sad, empty wallet.",
+	"betAsk": "You have ${} in your bank. How much would you like to bet?",
+	"betAskRpt": "You have ${bank} in your bank. How much would you like to bet?\nHit Enter to repeat your last bet of ${bet}.",
+	"betNone": "Nice try, but you didn't bet anything, Dealer got annoyed and hits you with a shoe.",
+}
+
 def quitGame():
 	global bank, initBank
 	if bank > initBank:
@@ -154,7 +166,7 @@ def hit(playerHand, handVal, shoe):
 			print("Sanding on 21, stop hitting me!")
 			return {"done": True}
 		#print("True Count: {}".format(shoe.countNow))
-		print("Hit(h) or Stand(s)?")
+		print(uiTxt["hitStand"])
 		hitAgain = readInput(">")
 		if hitAgain == 'h':
 			return {"done": False}
@@ -208,7 +220,7 @@ def split(playerHand, shoe):
 			if result1["bust"]:
 				print("You bust on your first hand with {}!.".format(hand1))
 				return {"done": True}
-			print("Hit(h) or Stand(s)?")
+			print(uiTxt["hitStand"])
 			return {"done": False, "nextChoice": readInput(">")}
 		if result1["intent"] == "dd":
 			betDouble1 += 1
@@ -236,7 +248,7 @@ def split(playerHand, shoe):
 			if result2["bust"]:
 				print("You bust on your second hand with {}!.".format(hand2))
 				return {"done": True}
-			print("Hit(h) or Stand(s)?")
+			print(uiTxt["hitStand"])
 			return {"done": False, "nextChoice": readInput(">")}
 		if result2["intent"] == "dd":
 			betDouble2 += 1
@@ -268,9 +280,9 @@ def resolvePlayerTurn(canSplit, state, dVal, shoe):
 		intentRes = parsePlayerIntent(choice, canSplit)
 		if intentRes["invalid"]:
 			if intentRes["splitBlock"]:
-				print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
+				print(uiTxt["splitBlk"])
 			else:
-				print("You can't do that!")
+				print(uiTxt["cantDo"])
 			continue
 		intent = intentRes["intent"]
 		if intent == "quit":
@@ -281,7 +293,7 @@ def resolvePlayerTurn(canSplit, state, dVal, shoe):
 			break
 		elif intent == "split":
 			if state.bank - state.bet*2 < 0:
-				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
+				print(uiTxt["noFundsSplit"])
 				handVal = hit(state.playerHand, state.playerTotal, shoe)
 				applyNonSplitIntent(state, "hit", handTotal=handVal)
 			else:
@@ -425,8 +437,8 @@ initBank = session["initBank"]
 #Play Begins
 while True:
 	if bank <= 0:
-		print("You are totally out of money!")
-		print("Add more to your bank or type q to exit the game, walking away with a sad, empty wallet.")
+		print(uiTxt["outMoney1"])
+		print(uiTxt["outMoney2"])
 		while True:
 			addCash = readInput("$")
 			if addCash.lower() == "q":
@@ -450,9 +462,9 @@ while True:
 	##print("True Count: {}".format(shoe.countNow))
 
 	if bet == 0:
-		print("You have ${} in your bank. How much would you like to bet?".format(bank))
+		print(uiTxt["betAsk"].format(bank))
 	else:
-		print("You have ${bank} in your bank. How much would you like to bet?\nHit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
+		print(uiTxt["betAskRpt"].format(bank=bank, bet=bet))
 	betIn = readInput("$?")
 	if betIn.lower() == "q":
 		quitGame()
@@ -460,7 +472,7 @@ while True:
 		bet = int(betIn)
 	except ValueError:
 		if bet == 0:
-			print("Nice try, but you didn't bet anything, Dealer got annoyed and hits you with a shoe.")
+			print(uiTxt["betNone"])
 			continue
 		else:
 			pass
