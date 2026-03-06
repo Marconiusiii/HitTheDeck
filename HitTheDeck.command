@@ -3,8 +3,9 @@
 import os
 import random
 from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBlackjack
-from engine import drawCardToHand, evaluateInitialBlackjack, resolveInsurance, resolveRound
+from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evaluatePlayerTurnOutcome
+from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
 
 # Version Number
 version = "5.0.0"
@@ -118,11 +119,12 @@ lose = [
 # Hit function
 def hit(playerHand, handVal, shoe):
 	while True:
-		cardHit, cardHitVal, handVal = drawCardToHand(shoe, playerHand)
-		print("You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal))
-		if handVal >= 22:
+		step = playerHitStep(shoe, playerHand)
+		print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=step["total"]))
+		handVal = step["total"]
+		if step["bust"]:
 			break
-		elif handVal == 21:
+		elif step["blackjack"]:
 			print("Sanding on 21, stop hitting me!")
 			break
 		#print("True Count: {}".format(shoe.count_actual))
@@ -137,44 +139,42 @@ def hit(playerHand, handVal, shoe):
 
 #Double Down function
 def doubleDown(playerHand, handVal, shoe):
-	ddCard, dd, handVal = drawCardToHand(shoe, playerHand)
-	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=ddCard, hand=handVal))
-	return handVal
+	step = playerDoubleDownStep(shoe, playerHand)
+	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=step["card_name"], hand=step["total"]))
+	return step["total"]
 
 #Dealer engine
 def dealer(dCard1, dCard2, dealerHand, shoe):
-	dealerHand[:] = [11 if card == 1 else card for card in dealerHand]
+	dealer_result = playDealerTurn(shoe, dealerHand)
 	dVal = handValue(dealerHand)
 	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
-	if dVal < 17:
-		while True:
-			dHit, dh1, dVal = drawCardToHand(shoe, dealerHand)
-			print("Dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
-			if dVal <= 16:
-				continue
-			elif 17 <= dVal <= 21:
-				print("Dealer stands with {}.".format(dVal))
-				break
-			else:
-				break
+	if dealer_result["events"]:
+		for event in dealer_result["events"]:
+			print("Dealer draws the {card} for a total of {hand}.".format(card=event["card_name"], hand=event["total"]))
+		if 17 <= dealer_result["final_total"] <= 21:
+			print("Dealer stands with {}.".format(dealer_result["final_total"]))
 	else:
 		print("Dealer stands on {}.".format(dVal))
-	return dVal
+	return dealer_result["final_total"]
 
 # Split function
 def split(playerHand, shoe):
 	betDouble1 = betDouble2 = 0
-	spCard1, sp1, _ = drawCardToHand(shoe, [])
-	spCard2, sp2, _ = drawCardToHand(shoe, [])
-	handSP1, hand1 = startHand(sp1, playerHand[0])
-	handSP2, hand2 = startHand(sp2, playerHand[1])
+	split_start = startSplitHands(shoe, playerHand)
+	spCard1 = split_start["first_draw_card"]
+	spCard2 = split_start["second_draw_card"]
+	handSP1 = split_start["hand1"]
+	handSP2 = split_start["hand2"]
+	hand1 = split_start["total1"]
+	hand2 = split_start["total2"]
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = input(">")
 	if h1 == 'h':
 		while True:
-			handHit1, spH1, hand1 = drawCardToHand(shoe, handSP1)
-			print("You drew the {card} and now have {hand}.".format(card=handHit1, hand=hand1))
+			step = playerHitStep(shoe, handSP1)
+			hand1 = step["total"]
+			print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=hand1))
 			if hand1 >= 22:
 				print("You bust on your first hand with {}!.".format(hand1))
 				break
@@ -189,7 +189,9 @@ def split(playerHand, shoe):
 				break
 	elif h1 == 'dd':
 		betDouble1 += 1
-		ddHand1, ddH1, hand1 = drawCardToHand(shoe, handSP1)
+		step = playerDoubleDownStep(shoe, handSP1)
+		ddHand1 = step["card_name"]
+		hand1 = step["total"]
 		if hand1 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1))
 		else:
@@ -203,8 +205,9 @@ def split(playerHand, shoe):
 	h2 = input(">")
 	if h2 == 'h':
 		while True:
-			handHit2, spH2, hand2 = drawCardToHand(shoe, handSP2)
-			print("You drew the {card} and now have {hand}.".format(card=handHit2, hand=hand2))
+			step = playerHitStep(shoe, handSP2)
+			hand2 = step["total"]
+			print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=hand2))
 			if hand2 >= 22:
 				print("You bust on your second hand with {}!.".format(hand2))
 				break
@@ -219,7 +222,9 @@ def split(playerHand, shoe):
 				break
 	elif h2 == 'dd':
 		betDouble2 += 1
-		ddHand2, ddH2, hand2 = drawCardToHand(shoe, handSP2)
+		step = playerDoubleDownStep(shoe, handSP2)
+		ddHand2 = step["card_name"]
+		hand2 = step["total"]
 		if hand2 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2))
 		else:

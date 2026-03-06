@@ -6,7 +6,8 @@ from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
 from engine import canSplitCards, compareHandTotals, dealRound
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evaluatePlayerTurnOutcome, resolveInsurance, resolveRound
-from engine import settleSplitHand, startHand
+from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, settleSplitHand
+from engine import startHand, startSplitHands
 
 
 class EngineTests(unittest.TestCase):
@@ -170,6 +171,38 @@ class EngineTests(unittest.TestCase):
 		outcome = evaluatePlayerTurnOutcome(state, dealer_total=18)
 		self.assertTrue(outcome["round_over"])
 		self.assertEqual(outcome["event"]["code"], "player_bust")
+
+	def test_player_hit_and_double_steps(self):
+		shoe = Shoe(1)
+		hand = [10, 5]
+		step = playerHitStep(shoe, hand)
+		self.assertIn("card_name", step)
+		self.assertIn("total", step)
+		self.assertEqual(step["total"], handValue(hand))
+
+		hand2 = [9, 2]
+		step2 = playerDoubleDownStep(shoe, hand2)
+		self.assertIn("card_name", step2)
+		self.assertIn("total", step2)
+		self.assertEqual(step2["total"], handValue(hand2))
+
+	def test_play_dealer_turn(self):
+		shoe = Shoe(1)
+		dealer_hand = [10, 6]
+		result = playDealerTurn(shoe, dealer_hand)
+		self.assertIn("final_total", result)
+		self.assertIn("events", result)
+		if result["events"]:
+			self.assertGreaterEqual(result["final_total"], 17)
+
+	def test_start_split_hands(self):
+		shoe = Shoe(1)
+		player_hand = [8, 8]
+		result = startSplitHands(shoe, player_hand)
+		self.assertIn("first_draw_card", result)
+		self.assertIn("second_draw_card", result)
+		self.assertEqual(len(result["hand1"]), 2)
+		self.assertEqual(len(result["hand2"]), 2)
 
 
 if __name__ == "__main__":

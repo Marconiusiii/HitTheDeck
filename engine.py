@@ -106,6 +106,59 @@ def drawCardToHand(shoe, hand):
 	return card_name, card_value, total
 
 
+def playerHitStep(shoe, player_hand):
+	card_name, card_value, total = drawCardToHand(shoe, player_hand)
+	return {
+		"card_name": card_name,
+		"card_value": card_value,
+		"total": total,
+		"bust": total >= 22,
+		"blackjack": total == 21,
+	}
+
+
+def playerDoubleDownStep(shoe, player_hand):
+	card_name, card_value, total = drawCardToHand(shoe, player_hand)
+	return {
+		"card_name": card_name,
+		"card_value": card_value,
+		"total": total,
+		"bust": total >= 22,
+	}
+
+
+def dealerDrawStep(shoe, dealer_hand):
+	card_name, card_value, total = drawCardToHand(shoe, dealer_hand)
+	return {"card_name": card_name, "card_value": card_value, "total": total}
+
+
+def playDealerTurn(shoe, dealer_hand):
+	dealer_hand[:] = [11 if card == 1 else card for card in dealer_hand]
+	total = handValue(dealer_hand)
+	events = []
+	if total < 17:
+		while total <= 16:
+			step = dealerDrawStep(shoe, dealer_hand)
+			total = step["total"]
+			events.append({"code": "dealer_draw", "card_name": step["card_name"], "total": total})
+	return {"final_total": total, "events": events}
+
+
+def startSplitHands(shoe, player_hand):
+	card1_name, card1_value, _ = drawCardToHand(shoe, [])
+	card2_name, card2_value, _ = drawCardToHand(shoe, [])
+	hand1, total1 = startHand(card1_value, player_hand[0])
+	hand2, total2 = startHand(card2_value, player_hand[1])
+	return {
+		"first_draw_card": card1_name,
+		"second_draw_card": card2_name,
+		"hand1": hand1,
+		"hand2": hand2,
+		"total1": total1,
+		"total2": total2,
+	}
+
+
 def evaluateInitialBlackjack(player_total, dealer_raw_cards):
 	player_blackjack = player_total == 21
 	dealer_blackjack = isBlackjack(dealer_raw_cards)
