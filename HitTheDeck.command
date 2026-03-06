@@ -403,102 +403,81 @@ def resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, sh
 	state.dealerTotal = dVal
 	return resolveDealerPhase(state, dVal)
 
-bet = 0
-bank = initBank = 0
-
-# Game starts here
-print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
-print("How much would you like to cash in for your bank?")
-while True:
-	bankRes = parseBankInput(readInput("$"))
-	if bankRes["ok"]:
-		bank = bankRes["value"]
-		break
-	print("That wasn't a number, doofus.")
-	continue
-print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
-initBank = bank
-
-#Decks and Shuffle
-while True:
-	deckRes = parseDeckCount(readInput("Please choose 1-6 Decks >"))
-	if not deckRes["ok"] and deckRes["reason"] == "notNum":
-		print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
-		continue
-	deckAmount = deckRes["value"]
-	if deckAmount == 1:
-		print("Starting a single deck game. Good luck!")
-		break
-	elif 2 <= deckAmount <= 6:
-		print("Starting a game with {} decks. Good luck!".format(deckAmount))
-		break
-	elif not deckRes["ok"] and deckRes["reason"] == "tooHigh":
-		print("Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again.")
-		continue
-	elif not deckRes["ok"] and deckRes["reason"] == "tooLow":
-		print("What are you trying to do? Not play Blackjack? Add some cards, you dork!")
-		continue
-	else:
-		print("That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose.")
-		continue
-
-shuffle = deckAmount * 52 - 20
-
-# Initial deck creation
-session = startSession(bank, deckAmount)
-shoe = session["shoe"]
-bank = session["bank"]
-initBank = session["initBank"]
-
-#Play Begins
-while True:
-	if bank <= 0:
-		print(uiTxt["outMoney1"])
-		print(uiTxt["outMoney2"])
-		while True:
-			addCash = readInput("$")
-			if addCash.lower() == "q":
-				quitGame()
-			try:
-				bank += +int(addCash)
-			except ValueError:
-				print("That wasn't a number, try again.")
-				continue
-			if bank < 0:
-				print("You fail at math. Try again!")
-				bank = 0
-				continue
-			else:
-				print("Great, starting you off again with ${}.".format(bank))
-				break
-	else:
-		pass
-
-# Betting
-	##print("True Count: {}".format(shoe.countNow))
-
-	if bet == 0:
-		print(uiTxt["betAsk"].format(bank))
-	else:
-		print(uiTxt["betAskRpt"].format(bank=bank, bet=bet))
-	betIn = readInput("$?")
-	if betIn.lower() == "q":
-		quitGame()
-	try:
-		bet = int(betIn)
-	except ValueError:
-		if bet == 0:
-			print(uiTxt["betNone"])
+def setupSession():
+	print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
+	print("How much would you like to cash in for your bank?")
+	while True:
+		bankRes = parseBankInput(readInput("$"))
+		if bankRes["ok"]:
+			bank = bankRes["value"]
+			break
+		print("That wasn't a number, doofus.")
+	print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
+	while True:
+		deckRes = parseDeckCount(readInput("Please choose 1-6 Decks >"))
+		if not deckRes["ok"] and deckRes["reason"] == "notNum":
+			print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
+			continue
+		deckCnt = deckRes["value"]
+		if deckCnt == 1:
+			print("Starting a single deck game. Good luck!")
+			break
+		elif 2 <= deckCnt <= 6:
+			print("Starting a game with {} decks. Good luck!".format(deckCnt))
+			break
+		elif not deckRes["ok"] and deckRes["reason"] == "tooHigh":
+			print("Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again.")
+			continue
+		elif not deckRes["ok"] and deckRes["reason"] == "tooLow":
+			print("What are you trying to do? Not play Blackjack? Add some cards, you dork!")
 			continue
 		else:
-			pass
-	if bet > bank:
-		print("You simply don't have the funds for a bet that size!")
-		continue
-	else:
-		print("You bet ${bet}.".format(bet=bet))
-	# Initial Draw
+			print("That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose.")
+			continue
+	session = startSession(bank, deckCnt)
+	return session, deckCnt
 
+def runBetFlow(bank, bet):
+	while True:
+		if bank <= 0:
+			print(uiTxt["outMoney1"])
+			print(uiTxt["outMoney2"])
+			while True:
+				addCash = readInput("$")
+				if addCash.lower() == "q":
+					quitGame()
+				try:
+					bank += +int(addCash)
+				except ValueError:
+					print("That wasn't a number, try again.")
+					continue
+				if bank < 0:
+					print("You fail at math. Try again!")
+					bank = 0
+					continue
+				print("Great, starting you off again with ${}.".format(bank))
+				break
+		if bet == 0:
+			print(uiTxt["betAsk"].format(bank))
+		else:
+			print(uiTxt["betAskRpt"].format(bank=bank, bet=bet))
+		betIn = readInput("$?")
+		if betIn.lower() == "q":
+			quitGame()
+		try:
+			nextBet = int(betIn)
+		except ValueError:
+			if bet == 0:
+				print(uiTxt["betNone"])
+				continue
+			nextBet = bet
+		if nextBet > bank:
+			print("You simply don't have the funds for a bet that size!")
+			continue
+		print("You bet ${bet}.".format(bet=nextBet))
+		return bank, nextBet
+
+def runRoundFlow(shoe, bank, bet):
 	if len(shoe.deck) < 15:
 		shoe.reset()
 		print("\nShuffling!\n")
@@ -515,31 +494,38 @@ while True:
 	dealerBlackjack = isBlackjack(dealerHand)
 	initBj = evaluateInitialBlackjack(state.playerTotal, dealerHand)
 	if renderInitBj(initBj, state, card1, card2):
-		bank = state.bank
-		continue
-
+		return state.bank
 	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
-
-	# Insurance
 	if d2 == 1:
 		tookIns = promptInsuranceDecision()
 		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, bet)
 		state.bank += insRes["bankDelta"]
 		renderInsRes(insRes, bet)
 		if insRes["roundOver"]:
-			bank = state.bank
-			continue
+			return state.bank
 	else:
 		dealerRes = resolveInsurance(d2, False, dealerBlackjack, bet)
 		if dealerRes["roundOver"]:
 			print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
 			state.bank += dealerRes["bankDelta"]
-			bank = state.bank
-			continue
+			return state.bank
+	canSplit = canSplitCards(card1, card2)
+	state = resolvePlayerTurn(canSplit, state, dVal, shoe)
+	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
+	return state.bank
 
-		# Split Check
-		canSplit = canSplitCards(card1, card2)
-		state = resolvePlayerTurn(canSplit, state, dVal, shoe)
-		state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
-		bank = state.bank
-		continue
+bet = 0
+bank = initBank = 0
+
+# Game starts here
+session, deckAmount = setupSession()
+shuffle = deckAmount * 52 - 20
+shoe = session["shoe"]
+bank = session["bank"]
+initBank = session["initBank"]
+
+#Play Begins
+while True:
+	bank, bet = runBetFlow(bank, bet)
+	bank = runRoundFlow(shoe, bank, bet)
+	continue
