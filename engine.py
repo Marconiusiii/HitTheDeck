@@ -192,6 +192,41 @@ def resolveSplitHandIntent(choice, shoe, hand, current_total):
 	return result
 
 
+def parsePlayerIntent(choice, can_split):
+	intent = choice.lower()
+	if intent == "x":
+		return {"intent": "quit", "invalid": False, "split_not_allowed": False}
+	if intent == "sp":
+		if can_split:
+			return {"intent": "split", "invalid": False, "split_not_allowed": False}
+		return {"intent": "split", "invalid": True, "split_not_allowed": True}
+	if intent == "h":
+		return {"intent": "hit", "invalid": False, "split_not_allowed": False}
+	if intent == "dd":
+		return {"intent": "double_down", "invalid": False, "split_not_allowed": False}
+	if intent == "su":
+		return {"intent": "surrender", "invalid": False, "split_not_allowed": False}
+	if intent == "s":
+		return {"intent": "stand", "invalid": False, "split_not_allowed": False}
+	return {"intent": "invalid", "invalid": True, "split_not_allowed": False}
+
+
+def applyNonSplitIntent(state, intent, hand_total=None):
+	if intent == "hit":
+		applyAction(state, "h", hand_total=hand_total)
+		return state
+	if intent == "double_down":
+		applyAction(state, "dd", hand_total=hand_total)
+		return state
+	if intent == "surrender":
+		applyAction(state, "su", bank_delta=-(state.bet / 2))
+		return state
+	if intent == "stand":
+		applyAction(state, "s")
+		return state
+	return state
+
+
 def evaluateInitialBlackjack(player_total, dealer_raw_cards):
 	player_blackjack = player_total == 21
 	dealer_blackjack = isBlackjack(dealer_raw_cards)

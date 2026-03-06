@@ -3,6 +3,7 @@
 import unittest
 
 from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
+from engine import applyNonSplitIntent, parsePlayerIntent
 from engine import canSplitCards, compareHandTotals, dealRound
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evaluatePlayerTurnOutcome, resolveInsurance, resolveRound
@@ -224,6 +225,36 @@ class EngineTests(unittest.TestCase):
 
 		result = resolveSplitHandIntent("bad", shoe, hand, result["total"])
 		self.assertTrue(result["invalid"])
+
+	def test_parse_player_intent(self):
+		self.assertEqual(parsePlayerIntent("h", False)["intent"], "hit")
+		self.assertEqual(parsePlayerIntent("H", False)["intent"], "hit")
+		self.assertEqual(parsePlayerIntent("dd", False)["intent"], "double_down")
+		self.assertEqual(parsePlayerIntent("su", False)["intent"], "surrender")
+		self.assertEqual(parsePlayerIntent("s", False)["intent"], "stand")
+		self.assertEqual(parsePlayerIntent("x", False)["intent"], "quit")
+		self.assertFalse(parsePlayerIntent("sp", True)["invalid"])
+		sp_blocked = parsePlayerIntent("sp", False)
+		self.assertTrue(sp_blocked["invalid"])
+		self.assertTrue(sp_blocked["split_not_allowed"])
+		self.assertTrue(parsePlayerIntent("bad", False)["invalid"])
+
+	def test_apply_non_split_intent(self):
+		state = RoundState(bank=100, bet=10, player_total=15)
+		applyNonSplitIntent(state, "hit", hand_total=18)
+		self.assertEqual(state.choice, "h")
+		self.assertEqual(state.player_total, 18)
+
+		applyNonSplitIntent(state, "double_down", hand_total=20)
+		self.assertEqual(state.choice, "dd")
+		self.assertEqual(state.player_total, 20)
+
+		applyNonSplitIntent(state, "surrender")
+		self.assertEqual(state.choice, "su")
+		self.assertEqual(state.bank, 95)
+
+		applyNonSplitIntent(state, "stand")
+		self.assertEqual(state.choice, "s")
 
 
 if __name__ == "__main__":

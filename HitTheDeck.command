@@ -3,6 +3,7 @@
 import os
 import random
 from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBlackjack
+from engine import applyNonSplitIntent, parsePlayerIntent
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evaluatePlayerTurnOutcome
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
@@ -237,38 +238,40 @@ def playerActionPrompt(can_split):
 def resolvePlayerTurn(can_split, state, dVal, shoe):
 	while True:
 		choice = playerActionPrompt(can_split)
-		if choice == 'h' or choice == 'H':
-			handVal = hit(state.player_hand, state.player_total, shoe)
-			applyAction(state, choice, hand_total=handVal)
-			break
-		elif choice.lower() == "x":
+		intent_result = parsePlayerIntent(choice, can_split)
+		if intent_result["invalid"]:
+			if intent_result["split_not_allowed"]:
+				print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
+			else:
+				print("You can't do that!")
+			continue
+		intent = intent_result["intent"]
+		if intent == "quit":
 			quitGame()
-		elif can_split and choice == 'sp':
+		elif intent == "hit":
+			handVal = hit(state.player_hand, state.player_total, shoe)
+			applyNonSplitIntent(state, intent, hand_total=handVal)
+			break
+		elif intent == "split":
 			if state.bank - state.bet*2 < 0:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(state.player_hand, state.player_total, shoe)
-				applyAction(state, choice, hand_total=handVal)
+				applyNonSplitIntent(state, "hit", hand_total=handVal)
 			else:
 				handsplit = split(state.player_hand, shoe)
-				applyAction(state, choice, handsplit=handsplit)
+				applyAction(state, "sp", handsplit=handsplit)
 			break
-		elif (not can_split) and choice == 'sp':
-			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
-			continue
-		elif choice == 'dd':
+		elif intent == "double_down":
 			handVal = doubleDown(state.player_hand, state.player_total, shoe)
-			applyAction(state, choice, hand_total=handVal)
+			applyNonSplitIntent(state, intent, hand_total=handVal)
 			break
-		elif choice == 'su':
-			applyAction(state, choice, bank_delta=-(state.bet / 2))
+		elif intent == "surrender":
+			applyNonSplitIntent(state, intent)
 			break
-		elif choice == 's':
+		elif intent == "stand":
 			print("You stand on {}.".format(state.player_total))
-			applyAction(state, choice)
+			applyNonSplitIntent(state, intent)
 			break
-		else:
-			print("You can't do that!")
-			continue
 	return state
 
 
