@@ -227,6 +227,35 @@ def applyNonSplitIntent(state, intent, hand_total=None):
 	return state
 
 
+def parseBankInput(raw_value):
+	try:
+		value = int(raw_value)
+	except ValueError:
+		return {"ok": False, "value": None}
+	return {"ok": True, "value": value}
+
+
+def parseDeckCount(raw_value):
+	try:
+		value = int(raw_value)
+	except ValueError:
+		return {"ok": False, "value": None, "reason": "not_number"}
+	if value < 1:
+		return {"ok": False, "value": value, "reason": "too_low"}
+	if value > 6:
+		return {"ok": False, "value": value, "reason": "too_high"}
+	return {"ok": True, "value": value, "reason": "ok"}
+
+
+def startSession(bank, deck_amount):
+	return {
+		"bank": bank,
+		"init_bank": bank,
+		"deck_amount": deck_amount,
+		"shoe": Shoe(deck_amount),
+	}
+
+
 def evaluateInitialBlackjack(player_total, dealer_raw_cards):
 	player_blackjack = player_total == 21
 	dealer_blackjack = isBlackjack(dealer_raw_cards)

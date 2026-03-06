@@ -4,7 +4,8 @@ import unittest
 
 from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
 from engine import applyNonSplitIntent, parsePlayerIntent
-from engine import canSplitCards, compareHandTotals, dealRound
+from engine import canSplitCards, compareHandTotals, dealRound, parseBankInput
+from engine import parseDeckCount, startSession
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evaluatePlayerTurnOutcome, resolveInsurance, resolveRound
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, settleSplitHand
@@ -255,6 +256,32 @@ class EngineTests(unittest.TestCase):
 
 		applyNonSplitIntent(state, "stand")
 		self.assertEqual(state.choice, "s")
+
+	def test_parse_bank_input(self):
+		self.assertTrue(parseBankInput("100")["ok"])
+		self.assertEqual(parseBankInput("100")["value"], 100)
+		self.assertFalse(parseBankInput("abc")["ok"])
+
+	def test_parse_deck_count(self):
+		ok = parseDeckCount("6")
+		self.assertTrue(ok["ok"])
+		self.assertEqual(ok["value"], 6)
+		too_low = parseDeckCount("0")
+		self.assertFalse(too_low["ok"])
+		self.assertEqual(too_low["reason"], "too_low")
+		too_high = parseDeckCount("7")
+		self.assertFalse(too_high["ok"])
+		self.assertEqual(too_high["reason"], "too_high")
+		not_number = parseDeckCount("abc")
+		self.assertFalse(not_number["ok"])
+		self.assertEqual(not_number["reason"], "not_number")
+
+	def test_start_session(self):
+		session = startSession(250, 3)
+		self.assertEqual(session["bank"], 250)
+		self.assertEqual(session["init_bank"], 250)
+		self.assertEqual(session["deck_amount"], 3)
+		self.assertIn("shoe", session)
 
 
 if __name__ == "__main__":

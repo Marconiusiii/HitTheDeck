@@ -2,12 +2,13 @@
 
 import os
 import random
-from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBlackjack
+from engine import applyAction, canSplitCards, dealRound, handValue, isBlackjack
 from engine import applyNonSplitIntent, parsePlayerIntent
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evaluatePlayerTurnOutcome
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
 from engine import resolveSplitHandIntent
+from engine import parseBankInput, parseDeckCount, startSession
 
 # Version Number
 version = "5.0.0"
@@ -355,33 +356,33 @@ bank = initBank = 0
 print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
 print("How much would you like to cash in for your bank?")
 while True:
-	try:
-		bank = int(input("$"))
+	parsed_bank = parseBankInput(input("$"))
+	if parsed_bank["ok"]:
+		bank = parsed_bank["value"]
 		break
-	except ValueError:
-		print("That wasn't a number, doofus.")
-		continue
+	print("That wasn't a number, doofus.")
+	continue
 print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
 gameLoops = 0
 initBank = bank
 
 #Decks and Shuffle
 while True:
-	try:
-		deckAmount = int(input("Please choose 1-6 Decks >"))
-	except ValueError:
+	deck_result = parseDeckCount(input("Please choose 1-6 Decks >"))
+	if not deck_result["ok"] and deck_result["reason"] == "not_number":
 		print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
 		continue
+	deckAmount = deck_result["value"]
 	if deckAmount == 1:
 		print("Starting a single deck game. Good luck!")
 		break
 	elif 2 <= deckAmount <= 6:
 		print("Starting a game with {} decks. Good luck!".format(deckAmount))
 		break
-	elif deckAmount > 6:
+	elif not deck_result["ok"] and deck_result["reason"] == "too_high":
 		print("Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again.")
 		continue
-	elif deckAmount < 1:
+	elif not deck_result["ok"] and deck_result["reason"] == "too_low":
 		print("What are you trying to do? Not play Blackjack? Add some cards, you dork!")
 		continue
 	else:
@@ -391,7 +392,10 @@ while True:
 shuffle = deckAmount * 52 - 20
 
 # Initial deck creation
-shoe = Shoe(deckAmount)
+session = startSession(bank, deckAmount)
+shoe = session["shoe"]
+bank = session["bank"]
+initBank = session["init_bank"]
 
 #Play Begins
 while True:
