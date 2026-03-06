@@ -231,6 +231,91 @@ def split(playerHand, shoe):
 
 	return [hand1, hand2, betDouble1, betDouble2]
 
+
+def playerActionPrompt(can_split):
+	if can_split:
+		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
+	else:
+		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
+	return input(">  ")
+
+
+def resolvePlayerTurn(can_split, playerHand, handVal, bank, bet, dVal, shoe):
+	handsplit = None
+	while True:
+		choice = playerActionPrompt(can_split)
+		if choice == 'h' or choice == 'H':
+			handVal = hit(playerHand, handVal, shoe)
+			break
+		elif choice.lower() == "x":
+			quitGame()
+		elif can_split and choice == 'sp':
+			if bank - bet*2 < 0:
+				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
+				handVal = hit(playerHand, handVal, shoe)
+			else:
+				handsplit = split(playerHand, shoe)
+			break
+		elif (not can_split) and choice == 'sp':
+			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
+			continue
+		elif choice == 'dd':
+			handVal = doubleDown(playerHand, handVal, shoe)
+			break
+		elif choice == 'su':
+			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(dVal))
+			bank -= bet/2
+			break
+		elif choice == 's':
+			print("You stand on {}.".format(handVal))
+			break
+		else:
+			print("You can't do that!")
+			continue
+	return choice, handVal, handsplit, bank
+
+
+def resolveDealerPhase(choice, handsplit, bank, bet, handVal, dVal, charlie_paid):
+	if choice == 'sp' and bank - bet*2 >= 0:
+		hand1 = handsplit[0]
+		hand2 = handsplit[1]
+		betDouble1 = handsplit[2]
+		betDouble2 = handsplit[3]
+		outcome1, delta1 = settleSplitHand(hand1, dVal, bet, doubled=(betDouble1 == 1))
+		if outcome1 == "lose":
+			print("Your first hand loses!")
+		elif outcome1 == "push":
+			print("Your first hand is a push!")
+		else:
+			print("You win with your first hand!")
+		bank += delta1
+
+		outcome2, delta2 = settleSplitHand(hand2, dVal, bet, doubled=(betDouble2 == 1))
+		if outcome2 == "lose":
+			print("Your second hand loses!")
+			bank += delta2
+			return bank
+		elif outcome2 == "push":
+			print("Your second hand pushes!")
+			return bank
+		else:
+			bank += delta2
+			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
+			return bank
+
+	outcome = compareHandTotals(handVal, dVal)
+	if outcome == "lose":
+		print(lose[random.randint(0, len(lose)-1)])
+	elif outcome == "push":
+		print("It's a push!")
+	else:
+		if dVal >= 22 and handVal <= 21:
+			print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
+		else:
+			print(win[random.randint(0, len(win)-1)])
+	bank += bankrollDelta(outcome, bet, doubled=(choice == 'dd'), charlie_paid=charlie_paid)
+	return bank
+
 bet = 0
 bank = initBank = 0
 
@@ -382,43 +467,7 @@ while True:
 
 	# Split Check
 	can_split = canSplitCards(card1, card2)
-
-	while True:
-		if can_split:
-			print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
-			choice = input(">  ")
-		else:
-			print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
-			choice = input(">  ")
-		if choice == 'h' or choice == 'H':
-			handVal = hit(playerHand, handVal, shoe)
-			break
-		elif choice.lower() == "x":
-			quitGame()
-		elif can_split and choice == 'sp':
-			if bank - bet*2 < 0:
-				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
-				handVal = hit(playerHand, handVal, shoe)
-			else:
-				handsplit = split(playerHand, shoe)
-			break
-		elif (not can_split) and choice == 'sp':
-			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
-			continue
-
-		elif choice == 'dd':
-			handVal = doubleDown(playerHand, handVal, shoe)
-			break
-		elif choice == 'su':
-			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(dVal))
-			bank -= bet/2
-			break
-		elif choice == 's':
-			print("You stand on {}.".format(handVal))
-			break
-		else:
-			print("You can't do that!")
-			continue
+	choice, handVal, handsplit, bank = resolvePlayerTurn(can_split, playerHand, handVal, bank, bet, dVal, shoe)
 	if choice == 'su':
 		continue
 
@@ -437,44 +486,5 @@ while True:
 	# Dealer phase
 
 	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	if choice == 'sp' and bank - bet*2 >= 0:
-		hand1 = handsplit[0]
-		hand2 = handsplit[1]
-		betDouble1 = handsplit[2]
-		betDouble2 = handsplit[3]
-		outcome1, delta1 = settleSplitHand(hand1, dVal, bet, doubled=(betDouble1 == 1))
-		if outcome1 == "lose":
-			print("Your first hand loses!")
-		elif outcome1 == "push":
-			print("Your first hand is a push!")
-		else:
-			print("You win with your first hand!")
-		bank += delta1
-
-		outcome2, delta2 = settleSplitHand(hand2, dVal, bet, doubled=(betDouble2 == 1))
-		if outcome2 == "lose":
-			print("Your second hand loses!")
-			bank += delta2
-			continue
-		elif outcome2 == "push":
-			print("Your second hand pushes!")
-			continue
-		else:
-			bank += delta2
-			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
-			continue
-
-	outcome = compareHandTotals(handVal, dVal)
-	if outcome == "lose":
-		print(lose[random.randint(0, len(lose)-1)])
-	elif outcome == "push":
-		print("It's a push!")
-	else:
-		if dVal >= 22 and handVal <= 21:
-			print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
-		else:
-			print(win[random.randint(0, len(win)-1)])
-	bank += bankrollDelta(outcome, bet, doubled=(choice == 'dd'), charlie_paid=charlie_paid)
-	if outcome == "win" and charlie_paid:
-		continue
+	bank = resolveDealerPhase(choice, handsplit, bank, bet, handVal, dVal, charlie_paid)
 	continue
