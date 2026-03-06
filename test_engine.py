@@ -2,7 +2,7 @@
 
 import unittest
 
-from engine import addCard, canSplitCards, deckGenerator, handValue, isBlackjack
+from engine import Shoe, addCard, canSplitCards, deckGenerator, handValue, isBlackjack
 
 
 class EngineTests(unittest.TestCase):
@@ -32,6 +32,31 @@ class EngineTests(unittest.TestCase):
 	def test_split_card_rank_detection(self):
 		self.assertTrue(canSplitCards("8 of Spades", "8 of Hearts"))
 		self.assertFalse(canSplitCards("10 of Spades", "King of Hearts"))
+
+	def test_shoe_single_deck_draw_reduces_deck_size(self):
+		shoe = Shoe(1)
+		start_size = len(shoe.deck)
+		card_name, card_value = shoe.draw()
+		self.assertIsInstance(card_name, str)
+		self.assertIn(card_value, range(1, 11))
+		self.assertEqual(len(shoe.deck), start_size - 1)
+
+	def test_shoe_counter_updates_running_and_true_count(self):
+		shoe = Shoe(1)
+		shoe.counter(2)
+		shoe.counter(10)
+		self.assertEqual(shoe.card_count, 0)
+		self.assertEqual(shoe.count_actual, 0)
+
+	def test_shoe_reset_restores_state(self):
+		shoe = Shoe(2)
+		shoe.draw()
+		shoe.counter(10)
+		shoe.reset()
+		self.assertEqual(len(shoe.deck), 52)
+		self.assertEqual(shoe.discard, [])
+		self.assertEqual(shoe.card_count, 0)
+		self.assertEqual(shoe.count_actual, 0)
 
 
 if __name__ == "__main__":

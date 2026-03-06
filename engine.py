@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import random
 
 SUITS = ["Spades", "Clubs", "Hearts", "Diamonds"]
 
@@ -61,3 +62,55 @@ def cardRank(card_name):
 
 def canSplitCards(card1_name, card2_name):
 	return cardRank(card1_name) == cardRank(card2_name)
+
+
+class Shoe:
+	def __init__(self, deck_amount):
+		self.deck_amount = deck_amount
+		self.deck = deckGenerator()
+		self.discard = []
+		self.card_count = 0
+		self.count_actual = 0
+
+	def draw(self):
+		if self.deck_amount == 1:
+			card, card_value = random.choice(list(self.deck.items()))
+			del self.deck[card]
+			return card, card_value
+
+		while True:
+			card, card_value = random.choice(list(self.deck.items()))
+			if self.discard.count(card) == self.deck_amount:
+				del self.deck[card]
+				continue
+			self.discard.append(card)
+			return card, card_value
+
+	def counter(self, card):
+		if card in range(2, 7):
+			self.card_count += 1
+		elif card >= 10:
+			self.card_count -= 1
+
+		cards_remaining = len(self.deck)
+		if cards_remaining >= 260:
+			true_count = 6
+		elif 208 <= cards_remaining < 260:
+			true_count = 5
+		elif 156 <= cards_remaining < 208:
+			true_count = 4
+		elif 104 <= cards_remaining < 156:
+			true_count = 3
+		elif 52 <= cards_remaining < 104:
+			true_count = 2
+		else:
+			true_count = 1
+
+		self.count_actual = self.card_count // true_count
+		return self.count_actual
+
+	def reset(self):
+		self.deck = deckGenerator()
+		self.discard = []
+		self.card_count = 0
+		self.count_actual = 0
