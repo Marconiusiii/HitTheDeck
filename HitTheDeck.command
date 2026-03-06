@@ -34,6 +34,20 @@ def readInput(promptTxt):
 			continue
 		return userIn
 
+def runStepLoop(stepFn):
+	while True:
+		loopRes = stepFn()
+		if loopRes["done"]:
+			return loopRes
+
+def runChoiceLoop(startChoice, stepFn):
+	choice = startChoice
+	while True:
+		loopRes = stepFn(choice)
+		if loopRes["done"]:
+			return loopRes
+		choice = loopRes["nextChoice"]
+
 # Winning Calls
 
 win = [
@@ -129,23 +143,24 @@ lose = [
 
 # Hit function
 def hit(playerHand, handVal, shoe):
-	while True:
+	def doStep():
+		nonlocal handVal
 		step = playerHitStep(shoe, playerHand)
 		print("You drew the {card} and now have {hand}.".format(card=step["cardName"], hand=step["total"]))
 		handVal = step["total"]
 		if step["bust"]:
-			break
+			return {"done": True}
 		elif step["blackjack"]:
 			print("Sanding on 21, stop hitting me!")
-			break
+			return {"done": True}
 		#print("True Count: {}".format(shoe.countNow))
 		print("Hit(h) or Stand(s)?")
 		hitAgain = readInput(">")
 		if hitAgain == 'h':
-			continue
-		else:
-			print("You stand on {}.".format(handVal))
-			break
+			return {"done": False}
+		print("You stand on {}.".format(handVal))
+		return {"done": True}
+	runStepLoop(doStep)
 	return handVal
 
 #Double Down function
@@ -182,57 +197,59 @@ def split(playerHand, shoe):
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = readInput(">")
-	while True:
-		result1 = resolveSplitHandIntent(h1, shoe, handSP1, hand1)
+	def stepHand1(choice):
+		nonlocal hand1, betDouble1
+		result1 = resolveSplitHandIntent(choice, shoe, handSP1, hand1)
 		hand1 = result1["total"]
 		if result1["invalid"]:
-			break
+			return {"done": True}
 		if result1["intent"] == "h":
 			print("You drew the {card} and now have {hand}.".format(card=result1["drawCard"], hand=hand1))
 			if result1["bust"]:
 				print("You bust on your first hand with {}!.".format(hand1))
-				break
+				return {"done": True}
 			print("Hit(h) or Stand(s)?")
-			h1 = readInput(">")
-			continue
+			return {"done": False, "nextChoice": readInput(">")}
 		if result1["intent"] == "dd":
 			betDouble1 += 1
 			if result1["bust"]:
 				print("You drew the {card} and bust with {hand}!".format(card=result1["drawCard"], hand=hand1))
 			else:
 				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=result1["drawCard"], hand=hand1))
-			break
+			return {"done": True}
 		if result1["intent"] == "s":
 			print("You stand on your first hand with {}.".format(hand1))
-			break
-		break
+			return {"done": True}
+		return {"done": True}
+	runChoiceLoop(h1, stepHand1)
 	print("You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2))
 	print("Hit, Double Down, or stand?")
 	h2 = readInput(">")
-	while True:
-		result2 = resolveSplitHandIntent(h2, shoe, handSP2, hand2)
+	def stepHand2(choice):
+		nonlocal hand2, betDouble2
+		result2 = resolveSplitHandIntent(choice, shoe, handSP2, hand2)
 		hand2 = result2["total"]
 		if result2["invalid"]:
-			break
+			return {"done": True}
 		if result2["intent"] == "h":
 			print("You drew the {card} and now have {hand}.".format(card=result2["drawCard"], hand=hand2))
 			if result2["bust"]:
 				print("You bust on your second hand with {}!.".format(hand2))
-				break
+				return {"done": True}
 			print("Hit(h) or Stand(s)?")
-			h2 = readInput(">")
-			continue
+			return {"done": False, "nextChoice": readInput(">")}
 		if result2["intent"] == "dd":
 			betDouble2 += 1
 			if result2["bust"]:
 				print("You drew the {card} and bust with {hand}!".format(card=result2["drawCard"], hand=hand2))
 			else:
 				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=result2["drawCard"], hand=hand2))
-			break
+			return {"done": True}
 		if result2["intent"] == "s":
 			print("You stand on your second hand with a total of {}.".format(hand2))
-			break
-		break
+			return {"done": True}
+		return {"done": True}
+	runChoiceLoop(h2, stepHand2)
 
 	return [hand1, hand2, betDouble1, betDouble2]
 
