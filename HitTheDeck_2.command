@@ -59,6 +59,21 @@ def handCount(hand):
 		count += i
 	return count
 
+def handValue(hand):
+	total = handCount(hand)
+	soft_aces = hand.count(11)
+	while total > 21 and soft_aces > 0:
+		total -= 10
+		soft_aces -= 1
+	return total
+
+def addCard(hand, card_value):
+	if card_value == 1:
+		hand.append(11)
+	else:
+		hand.append(card_value)
+	return handValue(hand)
+
 # Draw function
 
 def draw():
@@ -197,25 +212,7 @@ def hit(playerHand, handVal, discard):
 	while True:
 		cardHit, cardHitVal = draw()
 		counter(cardHitVal)
-		if cardHitVal == 1 and handVal + 11 <= 21:
-			cardHitVal = 11
-			playerHand.append(cardHitVal)
-			handVal = handCount(playerHand)
-		elif playerHand[0] == 11 and handVal + cardHitVal > 21:
-			playerHand[0] = 1
-			playerHand.append(cardHitVal)
-			handVal = handCount(playerHand)
-		elif playerHand[1] == 11 and handVal + cardHitVal > 21:
-			playerHand[1] = 1
-			playerHand.append(cardHitVal)
-			handVal = handCount(playerHand)
-		elif len(playerHand) > 2 and  playerHand[2] == 11 and handVal + cardHitVal > 21:
-			playerHand[2] = 1
-			playerHand.append(cardHitVal)
-			handVal = handCount(playerHand)
-		else:
-			playerHand.append(cardHitVal)
-			handVal = handCount(playerHand)
+		handVal = addCard(playerHand, cardHitVal)
 		print("You drew the {card} and now have {hand}.".format(card=cardHit, hand=handVal))
 		if handVal >= 22:
 			break
@@ -236,61 +233,20 @@ def hit(playerHand, handVal, discard):
 def doubleDown(playerHand, handVal, discard):
 	ddCard, dd = draw()
 	counter(dd)
-	if dd == 1 and handVal + 11 <= 21:
-		dd = 11
-		playerHand.append(dd)
-		handVal = handCount(playerHand)
-	elif playerHand[0] == 11 and handVal + dd > 21:
-		playerHand[0] = 1
-		playerHand.append(dd)
-		handVal = handCount(playerHand)
-	elif playerHand[1] == 11 and handVal + dd > 21:
-		playerHand[1] = 1
-		playerHand.append(dd)
-		HandVal = handCount(playerHand)
-	else:
-		playerHand.append(dd)
-		handVal = handCount(playerHand)
+	handVal = addCard(playerHand, dd)
 	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=ddCard, hand=handVal))
 	return handVal
 
 #Dealer engine
 def dealer(dCard1, dCard2, dealerHand, discard):
-	if dealerHand[0] == 1 and dealerHand[1] == 1:
-		dealerHand[0] = 11
-		dVal = handCount(dealerHand)
-	elif dealerHand[0] == 1:
-		dealerHand[0] = 11
-		dVal = handCount(dealerHand)
-	elif dealerHand[1] == 1:
-		dealerHand[1] = 11
-		dVal = handCount(dealerHand)
-	else:
-		dVal = handCount(dealerHand)
+	dealerHand[:] = [11 if card == 1 else card for card in dealerHand]
+	dVal = handValue(dealerHand)
 	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
 	if dVal < 17:
 		while True:
 			dHit, dh1 = draw()
 			counter(dh1)
-			if dh1 == 1 and dVal + 11 <= 21:
-				dh1 = 11
-				dealerHand.append(dh1)
-				dVal = handCount(dealerHand)
-			elif dealerHand[0] == 11 and dVal + dh1 > 21:
-				dealerHand[0] = 1
-				dealerHand.append(dh1)
-				dVal = handCount(dealerHand)
-			elif dealerHand[1] == 11 and dVal + dh1 > 21:
-				dealerHand[1] = 1
-				dealerHand.append(dh1)
-				dVal = handCount(dealerHand)
-			elif len(dealerHand) > 2 and  dealerHand[2] == 11 and dVal + dh1 > 21:
-				dealerHand[2] = 1
-				dealerHand.append(dh1)
-				dVal = handCount(dealerHand)
-			else:
-				dealerHand.append(dh1)
-				dVal = handCount(dealerHand)
+			dVal = addCard(dealerHand, dh1)
 			print("Dealer draws the {card} for a total of {hand}.".format(card=dHit, hand=dVal))
 			if dVal <= 16:
 				continue
@@ -311,23 +267,11 @@ def split():
 	spCard2, sp2 = draw()
 	counter(sp1)
 	counter(sp2)
-	if playerHand[0] == 11:
-		playerHand[0] = 11
-		playerHand[1] = 11
-	elif (sp1 == 1 and playerHand[0] + 11 <= 21) and (sp2 == 1 and playerHand[1] + 11 <= 21):
-		sp1 = 11
-		sp2 = 11
-	elif sp1 == 1 and playerHand[0] + 11 <= 21:
-		sp1 = 11
-	elif sp2 == 1 and playerHand[1] + 11 <= 21:
-		sp2 = 11
-	else:
-		pass
-	handSP1 = [sp1, playerHand[0]]
-	hand1 = handCount(handSP1)
+	handSP1 = [11 if sp1 == 1 else sp1, playerHand[0]]
+	hand1 = handValue(handSP1)
 
-	handSP2 = [sp2, playerHand[1]]
-	hand2 = handCount(handSP2)
+	handSP2 = [11 if sp2 == 1 else sp2, playerHand[1]]
+	hand2 = handValue(handSP2)
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = input(">")
@@ -335,29 +279,7 @@ def split():
 		while True:
 			handHit1, spH1 = draw()
 			counter(spH1)
-			if spH1 == 1 and hand1 + 11 <= 21:
-				spH1 = 11
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
-			elif spH1 == 1 and playerHand[0] == 11:
-				playerHand[0] = 1
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
-			elif playerHand[0] == 11 and hand1 + spH1 > 21:
-				playerHand[0] = 1
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
-			elif len(handSP1) > 2 and handSP1[2] == 11 and hand1 + spH1 > 21:
-				handSP1[2] = 1
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
-			elif len(handSP1) > 2 and handSP1[0] == 11 and hand1 + spH1 > 21:
-				handSP1[0] = 1
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
-			else:
-				handSP1.append(spH1)
-				hand1 = handCount(handSP1)
+			hand1 = addCard(handSP1, spH1)
 			print("You drew the {card} and now have {hand}.".format(card=handHit1, hand=hand1))
 			if hand1 >= 22:
 				print("You bust on your first hand with {}!.".format(hand1))
@@ -375,21 +297,7 @@ def split():
 		betDouble1 += 1
 		ddHand1, ddH1 = draw()
 		counter(ddH1)
-		if ddH1 == 1 and hand1 + 11 <= 21:
-			ddH1 = 11
-			handSP1.append(ddH1)
-			hand1 = handCount(handSP1)
-		elif handSP1[1] == 11 and hand1 + ddH1 > 21:
-			handSP1[1] = 1
-			handSP1.append(ddH1)
-			hand1 = handCount(handSP1)
-		elif playerHand[0] == 11 and hand1 + ddH1 > 21:
-			playerHand[0] = 1
-			handSP1.append(ddH1)
-			hand1 = handCount(handSP1)
-		else:
-			handSP1.append(ddH1)
-			hand1 = handCount(handSP1)
+		hand1 = addCard(handSP1, ddH1)
 		if hand1 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand1, hand=hand1))
 		else:
@@ -405,29 +313,7 @@ def split():
 		while True:
 			handHit2, spH2 = draw()
 			counter(spH2)
-			if spH2 == 1 and hand2 + 11 <= 21:
-				spH2 = 11
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
-			elif spH2 == 1 and playerHand[1] == 11:
-				playerHand[1] = 1
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
-			elif playerHand[1] == 11 and hand2 + spH2 > 21:
-				playerHand[1] = 1
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
-			elif len(handSP2) > 2 and  handSP2[2] == 11 and handSP2 + spH2 > 21:
-				handSP2[2] = 1
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
-			elif len(handSP2) > 2 and  handSP2[0] == 11 and handSP2 + spH2 > 21:
-				handSP2[0] = 1
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
-			else:
-				handSP2.append(spH2)
-				hand2 = handCount(handSP2)
+			hand2 = addCard(handSP2, spH2)
 			print("You drew the {card} and now have {hand}.".format(card=handHit2, hand=hand2))
 			if hand2 >= 22:
 				print("You bust on your second hand with {}!.".format(hand2))
@@ -445,21 +331,7 @@ def split():
 		betDouble2 += 1
 		ddHand2, ddH2 = draw()
 		counter(ddH2)
-		if ddH2 == 1 and hand2 + 11 <= 21:
-			ddH2 = 11
-			handSP2.append(ddH2)
-			hand2 = handCount(handSP2)
-		elif sp2 == 11 and hand2 + ddH2 > 21:
-			handSP2[0] = 1
-			handSP2.append(ddH2)
-			hand2 = handCounrt(handSP2)
-		elif playerHand[1] == 11 and hand2 + ddH2 > 21:
-			playerHand[1] = 1
-			handSP2.append(ddH2)
-			hand2 = handCount(handSP2)
-		else:
-			handSP2.append(ddH2)
-			hand2 = handCount(handSP2)
+		hand2 = addCard(handSP2, ddH2)
 		if hand2 > 21:
 			print("You drew the {card} and bust with {hand}!".format(card=ddHand2, hand=hand2))
 		else:
@@ -574,57 +446,54 @@ while True:
 	counter(x)
 	counter(y)
 
-	dCard1, d1 =draw()
+	dCard1, d1 = draw()
 	dCard2, d2 = draw()
 	counter(d1)
 	counter(d2)
 	dealerHand = [d1, d2]
-	dVal = handCount(dealerHand)
+	dVal = handValue([11 if card == 1 else card for card in dealerHand])
 
-# Checking for Aces
+	playerHand = [11 if x == 1 else x, 11 if y == 1 else y]
+	handVal = handValue(playerHand)
+	playerBlackjack = handVal == 21
+	dealerBlackjack = (1 in dealerHand and 10 in dealerHand)
 
-	if x == 1 and y != 1:
-		x = 11
-	elif x == 1:
-		x = 11
-	elif y == 1:
-		y = 11
-	else:
-		pass
-
-	playerHand = [x, y]
-	handVal = handCount(playerHand)
-	if handVal == 21:
+	if playerBlackjack and dealerBlackjack:
+		print("Push! You and the Dealer both have Blackjack.")
+		continue
+	elif playerBlackjack:
 		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
 		bank += bet//2 * 3
 		continue
-	else:
-		pass
 
 	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
 
-# Insurance
+	# Insurance
 	if d2 == 1:
 		print("Insurance?")
 		ins = input("y/n?")
 		if ins == 'y':
 			print("Dealer checks their cards...")
-			if d1 == 10:
-				print("Oops, dealer has 21. You lose ${}.".format(bet//2))
-				bank -= bet//2
+			if dealerBlackjack:
+				print("Dealer has 21. Insurance wins and offsets your main bet.")
 				continue
 			else:
 				print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
 				bank -= bet//2
 		else:
 			print("You decline insurance and Dealer checks their cards...")
-			if d1 == 10:
+			if dealerBlackjack:
 				print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
 				bank -= bet
 				continue
 			else:
 				print("Dealer does not have 21! Phew, carry on.")
-				# Split Check
+	elif dealerBlackjack:
+		print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
+		bank -= bet
+		continue
+
+	# Split Check
 	card1StrA, card1StrB, card1StrC = card1.split()
 	card2StrA, card2StrB, card2strC = card2.split()
 
@@ -641,7 +510,7 @@ while True:
 		elif choice.lower() == "x":
 			quitGame()
 		elif card1StrA == card2StrA and choice == 'sp':
-			if bank - bet*2 <= 0:
+			if bank - bet*2 < 0:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, discard)
 			else:
@@ -671,14 +540,13 @@ while True:
 		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
 		bank -= bet
 		continue
-	else:
-		pass
-# 5 card Charlie
 
+	# 5 card Charlie
 	if len(playerHand) >= 5:
 		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
 		bank += bet
 		print("You now have ${} in your bank!".format(bank))
+		continue
 
 # Dealer phase
 
@@ -700,7 +568,7 @@ while True:
 		continue
 	else:
 		pass
-	if choice == 'sp' and bank - bet*2 > 0:
+	if choice == 'sp' and bank - bet*2 >= 0:
 		hand1 = handsplit[0]
 		hand2 = handsplit[1]
 		betDouble1 = handsplit[2]
