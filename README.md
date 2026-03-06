@@ -46,6 +46,6 @@ You win your bet if the Dealer busts or your hand(s) defeat the Dealer's hand. T
 You lose if you hit and your hand goes over 21 or if the Dealer's hand defeats yours. Your bet will be deducted from your bank and the round will restart asking you for your new bet.
 
 ### Running out of money and Quitting the Game
-If you run out of money, you have the option to add more to your bank or hit Ctrl-C to exit the game. You can exit the game at any time by hitting Ctrl-C or closing your Terminal session.
+If you run out of money, you have the option to add more to your bank or type q to exit the game. You can also type q at the betting prompt to quit before the next hand is dealt.
 
 ## Thanks for playing and enjoy!

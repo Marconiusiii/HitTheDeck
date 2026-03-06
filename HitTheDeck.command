@@ -239,9 +239,9 @@ def split(playerHand, shoe):
 
 def playerActionPrompt(canSplit):
 	if canSplit:
-		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
+		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n(q) to Quit.")
 	else:
-		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
+		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(q) to Quit.")
 	return readInput(">  ")
 
 
@@ -409,10 +409,13 @@ initBank = session["initBank"]
 while True:
 	if bank <= 0:
 		print("You are totally out of money!")
-		print("Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet.")
+		print("Add more to your bank or type q to exit the game, walking away with a sad, empty wallet.")
 		while True:
+			addCash = readInput("$")
+			if addCash.lower() == "q":
+				quitGame()
 			try:
-				bank += +int(readInput("$"))
+				bank += +int(addCash)
 			except ValueError:
 				print("That wasn't a number, try again.")
 				continue
@@ -433,8 +436,11 @@ while True:
 		print("You have ${} in your bank. How much would you like to bet?".format(bank))
 	else:
 		print("You have ${bank} in your bank. How much would you like to bet?\nHit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
+	betIn = readInput("$?")
+	if betIn.lower() == "q":
+		quitGame()
 	try:
-		bet = int(readInput("$?"))
+		bet = int(betIn)
 	except ValueError:
 		if bet == 0:
 			print("Nice try, but you didn't bet anything, Dealer got annoyed and hits you with a shoe.")

@@ -233,11 +233,12 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(parsePlayerIntent("dd", False)["intent"], "doubleDn")
 		self.assertEqual(parsePlayerIntent("su", False)["intent"], "surrender")
 		self.assertEqual(parsePlayerIntent("s", False)["intent"], "stand")
-		self.assertEqual(parsePlayerIntent("x", False)["intent"], "quit")
+		self.assertEqual(parsePlayerIntent("q", False)["intent"], "quit")
 		self.assertFalse(parsePlayerIntent("sp", True)["invalid"])
 		spBlocked = parsePlayerIntent("sp", False)
 		self.assertTrue(spBlocked["invalid"])
 		self.assertTrue(spBlocked["splitBlock"])
+		self.assertTrue(parsePlayerIntent("x", False)["invalid"])
 		self.assertTrue(parsePlayerIntent("bad", False)["invalid"])
 
 	def testApplyIntent(self):

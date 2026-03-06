@@ -194,7 +194,7 @@ def resolveSplitHandIntent(choice, shoe, hand, curTotal):
 
 def parsePlayerIntent(choice, canSplit):
 	intent = choice.lower()
-	if intent == "x":
+	if intent == "q":
 		return {"intent": "quit", "invalid": False, "splitBlock": False}
 	if intent == "sp":
 		if canSplit:
