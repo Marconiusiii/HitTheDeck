@@ -4,7 +4,7 @@ import random
 
 SUITS = ["Spades", "Clubs", "Hearts", "Diamonds"]
 
-CARD_VALUES = {
+cardVals = {
 	"Ace": 1,
 	"2": 2,
 	"3": 3,
@@ -24,7 +24,7 @@ CARD_VALUES = {
 def deckGenerator():
 	deck = {}
 	for suit in SUITS:
-		for card, value in CARD_VALUES.items():
+		for card, value in cardVals.items():
 			deck["{} of {}".format(card, suit)] = value
 	return deck
 
@@ -38,120 +38,120 @@ def handCount(hand):
 
 def handValue(hand):
 	total = handCount(hand)
-	soft_aces = hand.count(11)
-	while total > 21 and soft_aces > 0:
+	softAces = hand.count(11)
+	while total > 21 and softAces > 0:
 		total -= 10
-		soft_aces -= 1
+		softAces -= 1
 	return total
 
 
-def addCard(hand, card_value):
-	if card_value == 1:
+def addCard(hand, cardVal):
+	if cardVal == 1:
 		hand.append(11)
 	else:
-		hand.append(card_value)
+		hand.append(cardVal)
 	return handValue(hand)
 
 
-def isBlackjack(raw_cards):
-	return len(raw_cards) == 2 and 1 in raw_cards and 10 in raw_cards
+def isBlackjack(rawCards):
+	return len(rawCards) == 2 and 1 in rawCards and 10 in rawCards
 
 
-def cardRank(card_name):
-	return card_name.split()[0]
+def cardRank(cardName):
+	return cardName.split()[0]
 
 
-def canSplitCards(card1_name, card2_name):
-	return cardRank(card1_name) == cardRank(card2_name)
+def canSplitCards(card1Name, card2Name):
+	return cardRank(card1Name) == cardRank(card2Name)
 
 
-def compareHandTotals(player_total, dealer_total):
-	if player_total >= 22:
+def compareHandTotals(playerTotal, dealerTotal):
+	if playerTotal >= 22:
 		return "lose"
-	if dealer_total >= 22:
+	if dealerTotal >= 22:
 		return "win"
-	if player_total < dealer_total:
+	if playerTotal < dealerTotal:
 		return "lose"
-	if player_total == dealer_total:
+	if playerTotal == dealerTotal:
 		return "push"
 	return "win"
 
 
-def bankrollDelta(outcome, bet, doubled=False, charlie_paid=False):
+def bankrollDelta(outcome, bet, doubled=False, charliePaid=False):
 	wager = bet * 2 if doubled else bet
 	if outcome == "lose":
 		return -wager
 	if outcome == "push":
 		return 0
-	if charlie_paid:
+	if charliePaid:
 		return 0
 	return wager
 
 
-def settleSplitHand(hand_total, dealer_total, bet, doubled=False):
-	outcome = compareHandTotals(hand_total, dealer_total)
+def settleSplitHand(handTotal, dealerTotal, bet, doubled=False):
+	outcome = compareHandTotals(handTotal, dealerTotal)
 	delta = bankrollDelta(outcome, bet, doubled=doubled)
 	return outcome, delta
 
 
-def startHand(card_a_value, card_b_value):
-	hand = [11 if card_a_value == 1 else card_a_value, 11 if card_b_value == 1 else card_b_value]
+def startHand(cardAVal, cardBVal):
+	hand = [11 if cardAVal == 1 else cardAVal, 11 if cardBVal == 1 else cardBVal]
 	return hand, handValue(hand)
 
 
 def drawCardToHand(shoe, hand):
-	card_name, card_value = shoe.draw()
-	shoe.counter(card_value)
-	total = addCard(hand, card_value)
-	return card_name, card_value, total
+	cardName, cardVal = shoe.draw()
+	shoe.counter(cardVal)
+	total = addCard(hand, cardVal)
+	return cardName, cardVal, total
 
 
-def playerHitStep(shoe, player_hand):
-	card_name, card_value, total = drawCardToHand(shoe, player_hand)
+def playerHitStep(shoe, playerHand):
+	cardName, cardVal, total = drawCardToHand(shoe, playerHand)
 	return {
-		"card_name": card_name,
-		"card_value": card_value,
+		"cardName": cardName,
+		"cardVal": cardVal,
 		"total": total,
 		"bust": total >= 22,
 		"blackjack": total == 21,
 	}
 
 
-def playerDoubleDownStep(shoe, player_hand):
-	card_name, card_value, total = drawCardToHand(shoe, player_hand)
+def playerDoubleDownStep(shoe, playerHand):
+	cardName, cardVal, total = drawCardToHand(shoe, playerHand)
 	return {
-		"card_name": card_name,
-		"card_value": card_value,
+		"cardName": cardName,
+		"cardVal": cardVal,
 		"total": total,
 		"bust": total >= 22,
 	}
 
 
-def dealerDrawStep(shoe, dealer_hand):
-	card_name, card_value, total = drawCardToHand(shoe, dealer_hand)
-	return {"card_name": card_name, "card_value": card_value, "total": total}
+def dealerDrawStep(shoe, dealerHand):
+	cardName, cardVal, total = drawCardToHand(shoe, dealerHand)
+	return {"cardName": cardName, "cardVal": cardVal, "total": total}
 
 
-def playDealerTurn(shoe, dealer_hand):
-	dealer_hand[:] = [11 if card == 1 else card for card in dealer_hand]
-	total = handValue(dealer_hand)
+def playDealerTurn(shoe, dealerHand):
+	dealerHand[:] = [11 if card == 1 else card for card in dealerHand]
+	total = handValue(dealerHand)
 	events = []
 	if total < 17:
 		while total <= 16:
-			step = dealerDrawStep(shoe, dealer_hand)
+			step = dealerDrawStep(shoe, dealerHand)
 			total = step["total"]
-			events.append({"code": "dealer_draw", "card_name": step["card_name"], "total": total})
-	return {"final_total": total, "events": events}
+			events.append({"code": "dealerDraw", "cardName": step["cardName"], "total": total})
+	return {"finalTotal": total, "events": events}
 
 
-def startSplitHands(shoe, player_hand):
-	card1_name, card1_value, _ = drawCardToHand(shoe, [])
-	card2_name, card2_value, _ = drawCardToHand(shoe, [])
-	hand1, total1 = startHand(card1_value, player_hand[0])
-	hand2, total2 = startHand(card2_value, player_hand[1])
+def startSplitHands(shoe, playerHand):
+	card1Name, card1Val, _ = drawCardToHand(shoe, [])
+	card2Name, card2Val, _ = drawCardToHand(shoe, [])
+	hand1, total1 = startHand(card1Val, playerHand[0])
+	hand2, total2 = startHand(card2Val, playerHand[1])
 	return {
-		"first_draw_card": card1_name,
-		"second_draw_card": card2_name,
+		"firstDrawCard": card1Name,
+		"secondDrawCard": card2Name,
 		"hand1": hand1,
 		"hand2": hand2,
 		"total1": total1,
@@ -159,13 +159,13 @@ def startSplitHands(shoe, player_hand):
 	}
 
 
-def resolveSplitHandIntent(choice, shoe, hand, current_total):
+def resolveSplitHandIntent(choice, shoe, hand, curTotal):
 	intent = choice.lower()
 	result = {
 		"intent": intent,
-		"total": current_total,
+		"total": curTotal,
 		"doubled": False,
-		"draw_card": None,
+		"drawCard": None,
 		"bust": False,
 		"complete": False,
 		"invalid": False,
@@ -173,14 +173,14 @@ def resolveSplitHandIntent(choice, shoe, hand, current_total):
 	if intent == "h":
 		step = playerHitStep(shoe, hand)
 		result["total"] = step["total"]
-		result["draw_card"] = step["card_name"]
+		result["drawCard"] = step["cardName"]
 		result["bust"] = step["bust"]
 		result["complete"] = step["bust"]
 		return result
 	if intent == "dd":
 		step = playerDoubleDownStep(shoe, hand)
 		result["total"] = step["total"]
-		result["draw_card"] = step["card_name"]
+		result["drawCard"] = step["cardName"]
 		result["bust"] = step["bust"]
 		result["doubled"] = True
 		result["complete"] = True
@@ -192,34 +192,34 @@ def resolveSplitHandIntent(choice, shoe, hand, current_total):
 	return result
 
 
-def parsePlayerIntent(choice, can_split):
+def parsePlayerIntent(choice, canSplit):
 	intent = choice.lower()
 	if intent == "x":
-		return {"intent": "quit", "invalid": False, "split_not_allowed": False}
+		return {"intent": "quit", "invalid": False, "splitBlock": False}
 	if intent == "sp":
-		if can_split:
-			return {"intent": "split", "invalid": False, "split_not_allowed": False}
-		return {"intent": "split", "invalid": True, "split_not_allowed": True}
+		if canSplit:
+			return {"intent": "split", "invalid": False, "splitBlock": False}
+		return {"intent": "split", "invalid": True, "splitBlock": True}
 	if intent == "h":
-		return {"intent": "hit", "invalid": False, "split_not_allowed": False}
+		return {"intent": "hit", "invalid": False, "splitBlock": False}
 	if intent == "dd":
-		return {"intent": "double_down", "invalid": False, "split_not_allowed": False}
+		return {"intent": "doubleDn", "invalid": False, "splitBlock": False}
 	if intent == "su":
-		return {"intent": "surrender", "invalid": False, "split_not_allowed": False}
+		return {"intent": "surrender", "invalid": False, "splitBlock": False}
 	if intent == "s":
-		return {"intent": "stand", "invalid": False, "split_not_allowed": False}
-	return {"intent": "invalid", "invalid": True, "split_not_allowed": False}
+		return {"intent": "stand", "invalid": False, "splitBlock": False}
+	return {"intent": "invalid", "invalid": True, "splitBlock": False}
 
 
-def applyNonSplitIntent(state, intent, hand_total=None):
+def applyNonSplitIntent(state, intent, handTotal=None):
 	if intent == "hit":
-		applyAction(state, "h", hand_total=hand_total)
+		applyAction(state, "h", handTotal=handTotal)
 		return state
-	if intent == "double_down":
-		applyAction(state, "dd", hand_total=hand_total)
+	if intent == "doubleDn":
+		applyAction(state, "dd", handTotal=handTotal)
 		return state
 	if intent == "surrender":
-		applyAction(state, "su", bank_delta=-(state.bet / 2))
+		applyAction(state, "su", bankDelta=-(state.bet / 2))
 		return state
 	if intent == "stand":
 		applyAction(state, "s")
@@ -227,212 +227,212 @@ def applyNonSplitIntent(state, intent, hand_total=None):
 	return state
 
 
-def parseBankInput(raw_value):
+def parseBankInput(rawVal):
 	try:
-		value = int(raw_value)
+		value = int(rawVal)
 	except ValueError:
 		return {"ok": False, "value": None}
 	return {"ok": True, "value": value}
 
 
-def parseDeckCount(raw_value):
+def parseDeckCount(rawVal):
 	try:
-		value = int(raw_value)
+		value = int(rawVal)
 	except ValueError:
-		return {"ok": False, "value": None, "reason": "not_number"}
+		return {"ok": False, "value": None, "reason": "notNum"}
 	if value < 1:
-		return {"ok": False, "value": value, "reason": "too_low"}
+		return {"ok": False, "value": value, "reason": "tooLow"}
 	if value > 6:
-		return {"ok": False, "value": value, "reason": "too_high"}
+		return {"ok": False, "value": value, "reason": "tooHigh"}
 	return {"ok": True, "value": value, "reason": "ok"}
 
 
-def startSession(bank, deck_amount):
+def startSession(bank, deckAmt):
 	return {
 		"bank": bank,
-		"init_bank": bank,
-		"deck_amount": deck_amount,
-		"shoe": Shoe(deck_amount),
+		"initBank": bank,
+		"deckAmt": deckAmt,
+		"shoe": Shoe(deckAmt),
 	}
 
 
-def evaluateInitialBlackjack(player_total, dealer_raw_cards):
-	player_blackjack = player_total == 21
-	dealer_blackjack = isBlackjack(dealer_raw_cards)
-	if player_blackjack and dealer_blackjack:
+def evaluateInitialBlackjack(playerTotal, dealerRawCards):
+	playerBj = playerTotal == 21
+	dealerBj = isBlackjack(dealerRawCards)
+	if playerBj and dealerBj:
 		return "push"
-	if player_blackjack:
-		return "player_blackjack"
-	if dealer_blackjack:
-		return "dealer_blackjack"
+	if playerBj:
+		return "playerBj"
+	if dealerBj:
+		return "dealerBj"
 	return "none"
 
 
-def resolveInsurance(upcard_value, took_insurance, dealer_blackjack, bet):
-	if upcard_value != 1:
-		if dealer_blackjack:
-			return {"round_over": True, "bank_delta": -bet, "result": "dealer_blackjack"}
-		return {"round_over": False, "bank_delta": 0, "result": "none"}
+def resolveInsurance(upCardVal, tookIns, dealerBj, bet):
+	if upCardVal != 1:
+		if dealerBj:
+			return {"roundOver": True, "bankDelta": -bet, "result": "dealerBj"}
+		return {"roundOver": False, "bankDelta": 0, "result": "none"}
 
-	if took_insurance:
-		if dealer_blackjack:
-			return {"round_over": True, "bank_delta": 0, "result": "insurance_win"}
-		return {"round_over": False, "bank_delta": -(bet // 2), "result": "insurance_lose"}
+	if tookIns:
+		if dealerBj:
+			return {"roundOver": True, "bankDelta": 0, "result": "insWin"}
+		return {"roundOver": False, "bankDelta": -(bet // 2), "result": "insLose"}
 
-	if dealer_blackjack:
-		return {"round_over": True, "bank_delta": -bet, "result": "dealer_blackjack"}
+	if dealerBj:
+		return {"roundOver": True, "bankDelta": -bet, "result": "dealerBj"}
 
-	return {"round_over": False, "bank_delta": 0, "result": "none"}
+	return {"roundOver": False, "bankDelta": 0, "result": "none"}
 
 
 @dataclass
 class RoundState:
 	bank: int
 	bet: int
-	player_hand: list = field(default_factory=list)
-	dealer_hand: list = field(default_factory=list)
-	player_total: int = 0
-	dealer_total: int = 0
-	player_cards: tuple = ("", "")
-	dealer_cards: tuple = ("", "")
+	playerHand: list = field(default_factory=list)
+	dealerHand: list = field(default_factory=list)
+	playerTotal: int = 0
+	dealerTotal: int = 0
+	playerCards: tuple = ("", "")
+	dealerCards: tuple = ("", "")
 	choice: str = ""
 	handsplit: list = None
-	charlie_paid: bool = False
+	charliePaid: bool = False
 
 
 @dataclass
 class RoundResolution:
 	outcome: str
-	bank_delta: int
-	split_results: list = None
+	bankDelta: int
+	splitRes: list = None
 	events: list = field(default_factory=list)
 
 
 def dealRound(shoe, bank, bet):
-	card1_name, card1_value = shoe.draw()
-	card2_name, card2_value = shoe.draw()
-	shoe.counter(card1_value)
-	shoe.counter(card2_value)
+	card1Name, card1Val = shoe.draw()
+	card2Name, card2Val = shoe.draw()
+	shoe.counter(card1Val)
+	shoe.counter(card2Val)
 
-	dcard1_name, dcard1_value = shoe.draw()
-	dcard2_name, dcard2_value = shoe.draw()
-	shoe.counter(dcard1_value)
-	shoe.counter(dcard2_value)
+	dCard1Name, dCard1Val = shoe.draw()
+	dCard2Name, dCard2Val = shoe.draw()
+	shoe.counter(dCard1Val)
+	shoe.counter(dCard2Val)
 
-	player_hand, player_total = startHand(card1_value, card2_value)
-	dealer_hand = [dcard1_value, dcard2_value]
-	dealer_total = handValue([11 if card == 1 else card for card in dealer_hand])
+	playerHand, playerTotal = startHand(card1Val, card2Val)
+	dealerHand = [dCard1Val, dCard2Val]
+	dealerTotal = handValue([11 if card == 1 else card for card in dealerHand])
 
 	return RoundState(
 		bank=bank,
 		bet=bet,
-		player_hand=player_hand,
-		dealer_hand=dealer_hand,
-		player_total=player_total,
-		dealer_total=dealer_total,
-		player_cards=(card1_name, card2_name),
-		dealer_cards=(dcard1_name, dcard2_name),
+		playerHand=playerHand,
+		dealerHand=dealerHand,
+		playerTotal=playerTotal,
+		dealerTotal=dealerTotal,
+		playerCards=(card1Name, card2Name),
+		dealerCards=(dCard1Name, dCard2Name),
 	)
 
 
-def applyAction(state, choice, hand_total=None, handsplit=None, bank_delta=0):
+def applyAction(state, choice, handTotal=None, handsplit=None, bankDelta=0):
 	state.choice = choice
-	if hand_total is not None:
-		state.player_total = hand_total
+	if handTotal is not None:
+		state.playerTotal = handTotal
 	if handsplit is not None:
 		state.handsplit = handsplit
-	state.bank += bank_delta
+	state.bank += bankDelta
 	return state
 
 
-def evaluatePlayerTurnOutcome(state, dealer_total):
+def evalTurnOut(state, dealerTotal):
 	if state.choice == "su":
-		return {"round_over": True, "event": {"code": "player_surrender", "dealer_total": dealer_total}}
-	if state.player_total >= 22:
-		return {"round_over": True, "event": {"code": "player_bust", "dealer_total": dealer_total}}
-	return {"round_over": False, "event": None}
+		return {"roundOver": True, "event": {"code": "playerSurr", "dealerTotal": dealerTotal}}
+	if state.playerTotal >= 22:
+		return {"roundOver": True, "event": {"code": "playerBust", "dealerTotal": dealerTotal}}
+	return {"roundOver": False, "event": None}
 
 
-def resolveRound(state, dealer_total):
+def resolveRound(state, dealerTotal):
 	if state.choice == "sp" and state.handsplit and state.bank - state.bet * 2 >= 0:
-		hand1, hand2, bet_double1, bet_double2 = state.handsplit
-		outcome1, delta1 = settleSplitHand(hand1, dealer_total, state.bet, doubled=(bet_double1 == 1))
-		outcome2, delta2 = settleSplitHand(hand2, dealer_total, state.bet, doubled=(bet_double2 == 1))
+		hand1, hand2, betDbl1, betDbl2 = state.handsplit
+		outcome1, delta1 = settleSplitHand(hand1, dealerTotal, state.bet, doubled=(betDbl1 == 1))
+		outcome2, delta2 = settleSplitHand(hand2, dealerTotal, state.bet, doubled=(betDbl2 == 1))
 		return RoundResolution(
 			outcome="split",
-			bank_delta=delta1 + delta2,
-			split_results=[(outcome1, delta1), (outcome2, delta2)],
+			bankDelta=delta1 + delta2,
+			splitRes=[(outcome1, delta1), (outcome2, delta2)],
 			events=[
-				{"code": "split_hand_result", "hand_index": 1, "outcome": outcome1},
-				{"code": "split_hand_result", "hand_index": 2, "outcome": outcome2},
+				{"code": "splitHandRes", "handIdx": 1, "outcome": outcome1},
+				{"code": "splitHandRes", "handIdx": 2, "outcome": outcome2},
 			],
 		)
 
-	outcome = compareHandTotals(state.player_total, dealer_total)
+	outcome = compareHandTotals(state.playerTotal, dealerTotal)
 	delta = bankrollDelta(
 		outcome,
 		state.bet,
 		doubled=(state.choice == "dd"),
-		charlie_paid=state.charlie_paid,
+		charliePaid=state.charliePaid,
 	)
 	if outcome == "lose":
-		events = [{"code": "player_lose"}]
+		events = [{"code": "playerLose"}]
 	elif outcome == "push":
-		events = [{"code": "player_push"}]
-	elif dealer_total >= 22 and state.player_total <= 21:
-		events = [{"code": "dealer_bust_win", "dealer_total": dealer_total}]
+		events = [{"code": "playerPush"}]
+	elif dealerTotal >= 22 and state.playerTotal <= 21:
+		events = [{"code": "dealerBustWin", "dealerTotal": dealerTotal}]
 	else:
-		events = [{"code": "player_win"}]
-	return RoundResolution(outcome=outcome, bank_delta=delta, split_results=None, events=events)
+		events = [{"code": "playerWin"}]
+	return RoundResolution(outcome=outcome, bankDelta=delta, splitRes=None, events=events)
 
 
 class Shoe:
-	def __init__(self, deck_amount):
-		self.deck_amount = deck_amount
+	def __init__(self, deckAmt):
+		self.deckAmt = deckAmt
 		self.deck = deckGenerator()
 		self.discard = []
-		self.card_count = 0
-		self.count_actual = 0
+		self.cardCnt = 0
+		self.countNow = 0
 
 	def draw(self):
-		if self.deck_amount == 1:
-			card, card_value = random.choice(list(self.deck.items()))
+		if self.deckAmt == 1:
+			card, cardVal = random.choice(list(self.deck.items()))
 			del self.deck[card]
-			return card, card_value
+			return card, cardVal
 
 		while True:
-			card, card_value = random.choice(list(self.deck.items()))
-			if self.discard.count(card) == self.deck_amount:
+			card, cardVal = random.choice(list(self.deck.items()))
+			if self.discard.count(card) == self.deckAmt:
 				del self.deck[card]
 				continue
 			self.discard.append(card)
-			return card, card_value
+			return card, cardVal
 
 	def counter(self, card):
 		if card in range(2, 7):
-			self.card_count += 1
+			self.cardCnt += 1
 		elif card >= 10:
-			self.card_count -= 1
+			self.cardCnt -= 1
 
-		cards_remaining = len(self.deck)
-		if cards_remaining >= 260:
-			true_count = 6
-		elif 208 <= cards_remaining < 260:
-			true_count = 5
-		elif 156 <= cards_remaining < 208:
-			true_count = 4
-		elif 104 <= cards_remaining < 156:
-			true_count = 3
-		elif 52 <= cards_remaining < 104:
-			true_count = 2
+		cardsLeft = len(self.deck)
+		if cardsLeft >= 260:
+			trueCnt = 6
+		elif 208 <= cardsLeft < 260:
+			trueCnt = 5
+		elif 156 <= cardsLeft < 208:
+			trueCnt = 4
+		elif 104 <= cardsLeft < 156:
+			trueCnt = 3
+		elif 52 <= cardsLeft < 104:
+			trueCnt = 2
 		else:
-			true_count = 1
+			trueCnt = 1
 
-		self.count_actual = self.card_count // true_count
-		return self.count_actual
+		self.countNow = self.cardCnt // trueCnt
+		return self.countNow
 
 	def reset(self):
 		self.deck = deckGenerator()
 		self.discard = []
-		self.card_count = 0
-		self.count_actual = 0
+		self.cardCnt = 0
+		self.countNow = 0

@@ -5,7 +5,7 @@ import random
 from engine import applyAction, canSplitCards, dealRound, handValue, isBlackjack
 from engine import applyNonSplitIntent, parsePlayerIntent
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
-from engine import evaluatePlayerTurnOutcome
+from engine import evalTurnOut
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
 from engine import resolveSplitHandIntent
 from engine import parseBankInput, parseDeckCount, startSession
@@ -77,7 +77,7 @@ lose = [
 "What in the ass?",
 "You just got F'd in the A!",
 "Dammit, dammit, dammit!",
- "Aww shucks.",
+"Aww shucks.",
 "Crap!",
 "Total bollocks, that.",
 "Hey, wha' happened?",
@@ -123,14 +123,14 @@ lose = [
 def hit(playerHand, handVal, shoe):
 	while True:
 		step = playerHitStep(shoe, playerHand)
-		print("You drew the {card} and now have {hand}.".format(card=step["card_name"], hand=step["total"]))
+		print("You drew the {card} and now have {hand}.".format(card=step["cardName"], hand=step["total"]))
 		handVal = step["total"]
 		if step["bust"]:
 			break
 		elif step["blackjack"]:
 			print("Sanding on 21, stop hitting me!")
 			break
-		#print("True Count: {}".format(shoe.count_actual))
+		#print("True Count: {}".format(shoe.countNow))
 		print("Hit(h) or Stand(s)?")
 		hitAgain = input(">")
 		if hitAgain == 'h':
@@ -143,33 +143,34 @@ def hit(playerHand, handVal, shoe):
 #Double Down function
 def doubleDown(playerHand, handVal, shoe):
 	step = playerDoubleDownStep(shoe, playerHand)
-	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=step["card_name"], hand=step["total"]))
+	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=step["cardName"], hand=step["total"]))
 	return step["total"]
 
 #Dealer engine
 def dealer(dCard1, dCard2, dealerHand, shoe):
-	dealer_result = playDealerTurn(shoe, dealerHand)
+	openTotal = handValue([11 if card == 1 else card for card in dealerHand])
+	dealerRes = playDealerTurn(shoe, dealerHand)
 	dVal = handValue(dealerHand)
-	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=dVal))
-	if dealer_result["events"]:
-		for event in dealer_result["events"]:
-			print("Dealer draws the {card} for a total of {hand}.".format(card=event["card_name"], hand=event["total"]))
-		if 17 <= dealer_result["final_total"] <= 21:
-			print("Dealer stands with {}.".format(dealer_result["final_total"]))
+	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=openTotal))
+	if dealerRes["events"]:
+		for event in dealerRes["events"]:
+			print("Dealer draws the {card} for a total of {hand}.".format(card=event["cardName"], hand=event["total"]))
+		if 17 <= dealerRes["finalTotal"] <= 21:
+			print("Dealer stands with {}.".format(dealerRes["finalTotal"]))
 	else:
 		print("Dealer stands on {}.".format(dVal))
-	return dealer_result["final_total"]
+	return dealerRes["finalTotal"]
 
 # Split function
 def split(playerHand, shoe):
 	betDouble1 = betDouble2 = 0
-	split_start = startSplitHands(shoe, playerHand)
-	spCard1 = split_start["first_draw_card"]
-	spCard2 = split_start["second_draw_card"]
-	handSP1 = split_start["hand1"]
-	handSP2 = split_start["hand2"]
-	hand1 = split_start["total1"]
-	hand2 = split_start["total2"]
+	splitStart = startSplitHands(shoe, playerHand)
+	spCard1 = splitStart["firstDrawCard"]
+	spCard2 = splitStart["secondDrawCard"]
+	handSP1 = splitStart["hand1"]
+	handSP2 = splitStart["hand2"]
+	hand1 = splitStart["total1"]
+	hand2 = splitStart["total2"]
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
 	h1 = input(">")
@@ -179,7 +180,7 @@ def split(playerHand, shoe):
 		if result1["invalid"]:
 			break
 		if result1["intent"] == "h":
-			print("You drew the {card} and now have {hand}.".format(card=result1["draw_card"], hand=hand1))
+			print("You drew the {card} and now have {hand}.".format(card=result1["drawCard"], hand=hand1))
 			if result1["bust"]:
 				print("You bust on your first hand with {}!.".format(hand1))
 				break
@@ -189,9 +190,9 @@ def split(playerHand, shoe):
 		if result1["intent"] == "dd":
 			betDouble1 += 1
 			if result1["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=result1["draw_card"], hand=hand1))
+				print("You drew the {card} and bust with {hand}!".format(card=result1["drawCard"], hand=hand1))
 			else:
-				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=result1["draw_card"], hand=hand1))
+				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=result1["drawCard"], hand=hand1))
 			break
 		if result1["intent"] == "s":
 			print("You stand on your first hand with {}.".format(hand1))
@@ -206,7 +207,7 @@ def split(playerHand, shoe):
 		if result2["invalid"]:
 			break
 		if result2["intent"] == "h":
-			print("You drew the {card} and now have {hand}.".format(card=result2["draw_card"], hand=hand2))
+			print("You drew the {card} and now have {hand}.".format(card=result2["drawCard"], hand=hand2))
 			if result2["bust"]:
 				print("You bust on your second hand with {}!.".format(hand2))
 				break
@@ -216,9 +217,9 @@ def split(playerHand, shoe):
 		if result2["intent"] == "dd":
 			betDouble2 += 1
 			if result2["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=result2["draw_card"], hand=hand2))
+				print("You drew the {card} and bust with {hand}!".format(card=result2["drawCard"], hand=hand2))
 			else:
-				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=result2["draw_card"], hand=hand2))
+				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=result2["drawCard"], hand=hand2))
 			break
 		if result2["intent"] == "s":
 			print("You stand on your second hand with a total of {}.".format(hand2))
@@ -228,49 +229,49 @@ def split(playerHand, shoe):
 	return [hand1, hand2, betDouble1, betDouble2]
 
 
-def playerActionPrompt(can_split):
-	if can_split:
+def playerActionPrompt(canSplit):
+	if canSplit:
 		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
 	else:
 		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
 	return input(">  ")
 
 
-def resolvePlayerTurn(can_split, state, dVal, shoe):
+def resolvePlayerTurn(canSplit, state, dVal, shoe):
 	while True:
-		choice = playerActionPrompt(can_split)
-		intent_result = parsePlayerIntent(choice, can_split)
-		if intent_result["invalid"]:
-			if intent_result["split_not_allowed"]:
+		choice = playerActionPrompt(canSplit)
+		intentRes = parsePlayerIntent(choice, canSplit)
+		if intentRes["invalid"]:
+			if intentRes["splitBlock"]:
 				print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
 			else:
 				print("You can't do that!")
 			continue
-		intent = intent_result["intent"]
+		intent = intentRes["intent"]
 		if intent == "quit":
 			quitGame()
 		elif intent == "hit":
-			handVal = hit(state.player_hand, state.player_total, shoe)
-			applyNonSplitIntent(state, intent, hand_total=handVal)
+			handVal = hit(state.playerHand, state.playerTotal, shoe)
+			applyNonSplitIntent(state, intent, handTotal=handVal)
 			break
 		elif intent == "split":
 			if state.bank - state.bet*2 < 0:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
-				handVal = hit(state.player_hand, state.player_total, shoe)
-				applyNonSplitIntent(state, "hit", hand_total=handVal)
+				handVal = hit(state.playerHand, state.playerTotal, shoe)
+				applyNonSplitIntent(state, "hit", handTotal=handVal)
 			else:
-				handsplit = split(state.player_hand, shoe)
+				handsplit = split(state.playerHand, shoe)
 				applyAction(state, "sp", handsplit=handsplit)
 			break
-		elif intent == "double_down":
-			handVal = doubleDown(state.player_hand, state.player_total, shoe)
-			applyNonSplitIntent(state, intent, hand_total=handVal)
+		elif intent == "doubleDn":
+			handVal = doubleDown(state.playerHand, state.playerTotal, shoe)
+			applyNonSplitIntent(state, intent, handTotal=handVal)
 			break
 		elif intent == "surrender":
 			applyNonSplitIntent(state, intent)
 			break
 		elif intent == "stand":
-			print("You stand on {}.".format(state.player_total))
+			print("You stand on {}.".format(state.playerTotal))
 			applyNonSplitIntent(state, intent)
 			break
 	return state
@@ -278,10 +279,10 @@ def resolvePlayerTurn(can_split, state, dVal, shoe):
 
 def renderRoundEvent(event):
 	code = event["code"]
-	if code == "split_hand_result":
-		hand_index = event["hand_index"]
+	if code == "splitHandRes":
+		handIdx = event["handIdx"]
 		outcome = event["outcome"]
-		if hand_index == 1:
+		if handIdx == 1:
 			if outcome == "lose":
 				print("Your first hand loses!")
 			elif outcome == "push":
@@ -295,25 +296,25 @@ def renderRoundEvent(event):
 				print("Your second hand pushes!")
 			else:
 				print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
-	elif code == "player_lose":
+	elif code == "playerLose":
 		print(lose[random.randint(0, len(lose)-1)])
-	elif code == "player_push":
+	elif code == "playerPush":
 		print("It's a push!")
-	elif code == "dealer_bust_win":
-		print("Dealer busts with {dealer}!\n{win}".format(dealer=event["dealer_total"], win=win[random.randint(0, len(win)-1)]))
-	elif code == "player_win":
+	elif code == "dealerBustWin":
+		print("Dealer busts with {dealer}!\n{win}".format(dealer=event["dealerTotal"], win=win[random.randint(0, len(win)-1)]))
+	elif code == "playerWin":
 		print(win[random.randint(0, len(win)-1)])
-	elif code == "player_surrender":
-		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event["dealer_total"]))
-	elif code == "player_bust":
-		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=event["dealer_total"]))
+	elif code == "playerSurr":
+		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event["dealerTotal"]))
+	elif code == "playerBust":
+		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=event["dealerTotal"]))
 
 
-def renderInitialBlackjackOutcome(outcome, state, card1, card2):
+def renderInitBj(outcome, state, card1, card2):
 	if outcome == "push":
 		print("Push! You and the Dealer both have Blackjack.")
 		return True
-	if outcome == "player_blackjack":
+	if outcome == "playerBj":
 		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=state.bet//2*3))
 		state.bank += state.bet//2 * 3
 		return True
@@ -323,20 +324,20 @@ def renderInitialBlackjackOutcome(outcome, state, card1, card2):
 def promptInsuranceDecision():
 	print("Insurance?")
 	ins = input("y/n?")
-	took_insurance = ins == 'y'
-	if took_insurance:
+	tookIns = ins == 'y'
+	if tookIns:
 		print("Dealer checks their cards...")
 	else:
 		print("You decline insurance and Dealer checks their cards...")
-	return took_insurance
+	return tookIns
 
 
-def renderInsuranceResolution(result, bet):
-	if result["result"] == "insurance_win":
+def renderInsRes(result, bet):
+	if result["result"] == "insWin":
 		print("Dealer has 21. Insurance wins and offsets your main bet.")
-	elif result["result"] == "insurance_lose":
+	elif result["result"] == "insLose":
 		print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
-	elif result["result"] == "dealer_blackjack":
+	elif result["result"] == "dealerBj":
 		print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
 	else:
 		print("Dealer does not have 21! Phew, carry on.")
@@ -346,7 +347,7 @@ def resolveDealerPhase(state, dVal):
 	resolution = resolveRound(state, dVal)
 	for event in resolution.events:
 		renderRoundEvent(event)
-	state.bank += resolution.bank_delta
+	state.bank += resolution.bankDelta
 	return state
 
 bet = 0
@@ -356,9 +357,9 @@ bank = initBank = 0
 print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
 print("How much would you like to cash in for your bank?")
 while True:
-	parsed_bank = parseBankInput(input("$"))
-	if parsed_bank["ok"]:
-		bank = parsed_bank["value"]
+	bankRes = parseBankInput(input("$"))
+	if bankRes["ok"]:
+		bank = bankRes["value"]
 		break
 	print("That wasn't a number, doofus.")
 	continue
@@ -368,21 +369,21 @@ initBank = bank
 
 #Decks and Shuffle
 while True:
-	deck_result = parseDeckCount(input("Please choose 1-6 Decks >"))
-	if not deck_result["ok"] and deck_result["reason"] == "not_number":
+	deckRes = parseDeckCount(input("Please choose 1-6 Decks >"))
+	if not deckRes["ok"] and deckRes["reason"] == "notNum":
 		print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
 		continue
-	deckAmount = deck_result["value"]
+	deckAmount = deckRes["value"]
 	if deckAmount == 1:
 		print("Starting a single deck game. Good luck!")
 		break
 	elif 2 <= deckAmount <= 6:
 		print("Starting a game with {} decks. Good luck!".format(deckAmount))
 		break
-	elif not deck_result["ok"] and deck_result["reason"] == "too_high":
+	elif not deckRes["ok"] and deckRes["reason"] == "tooHigh":
 		print("Too many decks! The card shoe explodes and you are felled by playing card papercuts. Good job! Try again.")
 		continue
-	elif not deck_result["ok"] and deck_result["reason"] == "too_low":
+	elif not deckRes["ok"] and deckRes["reason"] == "tooLow":
 		print("What are you trying to do? Not play Blackjack? Add some cards, you dork!")
 		continue
 	else:
@@ -395,7 +396,7 @@ shuffle = deckAmount * 52 - 20
 session = startSession(bank, deckAmount)
 shoe = session["shoe"]
 bank = session["bank"]
-initBank = session["init_bank"]
+initBank = session["initBank"]
 
 #Play Begins
 while True:
@@ -424,7 +425,7 @@ while True:
 		pass
 
 # Betting
-	##print("True Count: {}".format(shoe.count_actual))
+	##print("True Count: {}".format(shoe.countNow))
 
 	if bet == 0:
 		print("You have ${} in your bank. How much would you like to bet?".format(bank))
@@ -448,19 +449,19 @@ while True:
 	if len(shoe.deck) < 15:
 		shoe.reset()
 		print("\nShuffling!\n")
-		shoe.count_actual = 0
+		shoe.countNow = 0
 	state = dealRound(shoe, bank, bet)
-	state.charlie_paid = False
-	card1, card2 = state.player_cards
-	dCard1, dCard2 = state.dealer_cards
-	playerHand = state.player_hand
-	handVal = state.player_total
-	dealerHand = state.dealer_hand
+	state.charliePaid = False
+	card1, card2 = state.playerCards
+	dCard1, dCard2 = state.dealerCards
+	playerHand = state.playerHand
+	handVal = state.playerTotal
+	dealerHand = state.dealerHand
 	d1, d2 = dealerHand
-	dVal = state.dealer_total
+	dVal = state.dealerTotal
 	dealerBlackjack = isBlackjack(dealerHand)
-	initial_blackjack = evaluateInitialBlackjack(state.player_total, dealerHand)
-	if renderInitialBlackjackOutcome(initial_blackjack, state, card1, card2):
+	initBj = evaluateInitialBlackjack(state.playerTotal, dealerHand)
+	if renderInitBj(initBj, state, card1, card2):
 		bank = state.bank
 		continue
 
@@ -468,28 +469,28 @@ while True:
 
 	# Insurance
 	if d2 == 1:
-		took_insurance = promptInsuranceDecision()
-		insurance_resolution = resolveInsurance(d2, took_insurance, dealerBlackjack, bet)
-		state.bank += insurance_resolution["bank_delta"]
-		renderInsuranceResolution(insurance_resolution, bet)
-		if insurance_resolution["round_over"]:
+		tookIns = promptInsuranceDecision()
+		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, bet)
+		state.bank += insRes["bankDelta"]
+		renderInsRes(insRes, bet)
+		if insRes["roundOver"]:
 			bank = state.bank
 			continue
 	else:
-		dealer_resolution = resolveInsurance(d2, False, dealerBlackjack, bet)
-		if dealer_resolution["round_over"]:
+		dealerRes = resolveInsurance(d2, False, dealerBlackjack, bet)
+		if dealerRes["roundOver"]:
 			print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
-			state.bank += dealer_resolution["bank_delta"]
+			state.bank += dealerRes["bankDelta"]
 			bank = state.bank
 			continue
 
 	# Split Check
-	can_split = canSplitCards(card1, card2)
-	state = resolvePlayerTurn(can_split, state, dVal, shoe)
-	turn_outcome = evaluatePlayerTurnOutcome(state, dVal)
-	if turn_outcome["round_over"]:
-		renderRoundEvent(turn_outcome["event"])
-		if turn_outcome["event"]["code"] == "player_bust":
+	canSplit = canSplitCards(card1, card2)
+	state = resolvePlayerTurn(canSplit, state, dVal, shoe)
+	turnOut = evalTurnOut(state, dVal)
+	if turnOut["roundOver"]:
+		renderRoundEvent(turnOut["event"])
+		if turnOut["event"]["code"] == "playerBust":
 			state.bank -= bet
 		bank = state.bank
 		continue
@@ -499,12 +500,12 @@ while True:
 		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
 		state.bank += bet
 		print("You now have ${} in your bank!".format(state.bank))
-		state.charlie_paid = True
+		state.charliePaid = True
 
 	# Dealer phase
 
 	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	state.dealer_total = dVal
+	state.dealerTotal = dVal
 	state = resolveDealerPhase(state, dVal)
 	bank = state.bank
 	continue
