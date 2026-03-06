@@ -2,6 +2,7 @@
 
 import os
 import random
+from engine import addCard, canSplitCards, deckGenerator, handValue, isBlackjack
 
 # Version Number
 version = "4.0"
@@ -23,56 +24,6 @@ def clearScreen():
 
 deck = {}
 discard = []
-
-suits = ['Spades', 'Clubs', 'Hearts', 'Diamonds']
-
-cardValues = {
-'Ace': 1,
-'2': 2,
-'3': 3,
-'4': 4,
-'5': 5,
-'6': 6,
-'7': 7,
-'8': 8,
-'9': 9,
-'10': 10,
-'Jack': 10,
-'Queen': 10,
-'King': 10
-}
-
-# Deck Generation
-
-def deckGenerator():
-	d = {}
-	for suit in suits:
-		for card, val in cardValues.items():
-			d ['{} of {}'.format(card, suit)] = val
-	return d
-
-# Hand Count function
-
-def handCount(hand):
-	count = 0
-	for i in hand:
-		count += i
-	return count
-
-def handValue(hand):
-	total = handCount(hand)
-	soft_aces = hand.count(11)
-	while total > 21 and soft_aces > 0:
-		total -= 10
-		soft_aces -= 1
-	return total
-
-def addCard(hand, card_value):
-	if card_value == 1:
-		hand.append(11)
-	else:
-		hand.append(card_value)
-	return handValue(hand)
 
 # Draw function
 
@@ -457,7 +408,7 @@ while True:
 	playerHand = [11 if x == 1 else x, 11 if y == 1 else y]
 	handVal = handValue(playerHand)
 	playerBlackjack = handVal == 21
-	dealerBlackjack = (1 in dealerHand and 10 in dealerHand)
+	dealerBlackjack = isBlackjack(dealerHand)
 
 	if playerBlackjack and dealerBlackjack:
 		print("Push! You and the Dealer both have Blackjack.")
@@ -495,11 +446,10 @@ while True:
 		continue
 
 	# Split Check
-	card1StrA, card1StrB, card1StrC = card1.split()
-	card2StrA, card2StrB, card2strC = card2.split()
+	can_split = canSplitCards(card1, card2)
 
 	while True:
-		if card1StrA == card2StrA:
+		if can_split:
 			print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
 			choice = input(">  ")
 		else:
@@ -510,14 +460,14 @@ while True:
 			break
 		elif choice.lower() == "x":
 			quitGame()
-		elif card1StrA == card2StrA and choice == 'sp':
+		elif can_split and choice == 'sp':
 			if bank - bet*2 < 0:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
 				handVal = hit(playerHand, handVal, discard)
 			else:
 				handsplit = split()
 			break
-		elif card1StrA != card2StrA and choice == 'sp':
+		elif (not can_split) and choice == 'sp':
 			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
 			continue
 
