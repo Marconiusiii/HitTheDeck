@@ -24,6 +24,9 @@ YOU will be dealt two cards and shown the top facing card of the dealer. From he
 * Type *sp to Split if you are dealt two cards of the same value.
 * Type *su to Surrender and get half of your bet back.
 
+#### Global Command
+* Type *cl at any prompt to clear the screen and re-show the current prompt.
+
 ### How to Blackjack
 The point of the game is to get your hand as close to 21 as possible without Busting, or going over 21. You face off against the Dealer who will flip over their hole card and hit until they hit a Soft 17 or higher or Bust.
 

@@ -26,6 +26,14 @@ def quitGame():
 def clearScreen():
 	os.system('cls' if os.name == 'nt' else 'clear')
 
+def readInput(promptTxt):
+	while True:
+		userIn = input(promptTxt)
+		if userIn.lower() == "cl":
+			clearScreen()
+			continue
+		return userIn
+
 # Winning Calls
 
 win = [
@@ -132,7 +140,7 @@ def hit(playerHand, handVal, shoe):
 			break
 		#print("True Count: {}".format(shoe.countNow))
 		print("Hit(h) or Stand(s)?")
-		hitAgain = input(">")
+		hitAgain = readInput(">")
 		if hitAgain == 'h':
 			continue
 		else:
@@ -173,7 +181,7 @@ def split(playerHand, shoe):
 	hand2 = splitStart["total2"]
 	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
 	print("Hit, Double Down,  or stand on your first hand?")
-	h1 = input(">")
+	h1 = readInput(">")
 	while True:
 		result1 = resolveSplitHandIntent(h1, shoe, handSP1, hand1)
 		hand1 = result1["total"]
@@ -185,7 +193,7 @@ def split(playerHand, shoe):
 				print("You bust on your first hand with {}!.".format(hand1))
 				break
 			print("Hit(h) or Stand(s)?")
-			h1 = input(">")
+			h1 = readInput(">")
 			continue
 		if result1["intent"] == "dd":
 			betDouble1 += 1
@@ -200,7 +208,7 @@ def split(playerHand, shoe):
 		break
 	print("You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2))
 	print("Hit, Double Down, or stand?")
-	h2 = input(">")
+	h2 = readInput(">")
 	while True:
 		result2 = resolveSplitHandIntent(h2, shoe, handSP2, hand2)
 		hand2 = result2["total"]
@@ -212,7 +220,7 @@ def split(playerHand, shoe):
 				print("You bust on your second hand with {}!.".format(hand2))
 				break
 			print("Hit(h) or Stand(s)?")
-			h2 = input(">")
+			h2 = readInput(">")
 			continue
 		if result2["intent"] == "dd":
 			betDouble2 += 1
@@ -234,7 +242,7 @@ def playerActionPrompt(canSplit):
 		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n)x) to Quit.")
 	else:
 		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(x) to Quit.")
-	return input(">  ")
+	return readInput(">  ")
 
 
 def resolvePlayerTurn(canSplit, state, dVal, shoe):
@@ -323,7 +331,7 @@ def renderInitBj(outcome, state, card1, card2):
 
 def promptInsuranceDecision():
 	print("Insurance?")
-	ins = input("y/n?")
+	ins = readInput("y/n?")
 	tookIns = ins == 'y'
 	if tookIns:
 		print("Dealer checks their cards...")
@@ -357,19 +365,18 @@ bank = initBank = 0
 print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
 print("How much would you like to cash in for your bank?")
 while True:
-	bankRes = parseBankInput(input("$"))
+	bankRes = parseBankInput(readInput("$"))
 	if bankRes["ok"]:
 		bank = bankRes["value"]
 		break
 	print("That wasn't a number, doofus.")
 	continue
 print("Great, starting off with ${bank}. And how many decks?".format(bank=bank))
-gameLoops = 0
 initBank = bank
 
 #Decks and Shuffle
 while True:
-	deckRes = parseDeckCount(input("Please choose 1-6 Decks >"))
+	deckRes = parseDeckCount(readInput("Please choose 1-6 Decks >"))
 	if not deckRes["ok"] and deckRes["reason"] == "notNum":
 		print("That wasn't a number between 1-6! That wasn't even a number! Try again you silly goose.")
 		continue
@@ -400,17 +407,12 @@ initBank = session["initBank"]
 
 #Play Begins
 while True:
-	gameLoops += 1
-	if gameLoops == 18:
-		clearScreen()
-		gameLoops = 0
-
 	if bank <= 0:
 		print("You are totally out of money!")
 		print("Add more to your bank or hit Ctrl-C to exit the game, walking away with a sad, empty wallet.")
 		while True:
 			try:
-				bank += +int(input("$"))
+				bank += +int(readInput("$"))
 			except ValueError:
 				print("That wasn't a number, try again.")
 				continue
@@ -432,7 +434,7 @@ while True:
 	else:
 		print("You have ${bank} in your bank. How much would you like to bet?\nHit Enter to repeat your last bet of ${bet}.".format(bank=bank, bet=bet))
 	try:
-		bet = int(input("$?"))
+		bet = int(readInput("$?"))
 	except ValueError:
 		if bet == 0:
 			print("Nice try, but you didn't bet anything, Dealer got annoyed and hits you with a shoe.")
