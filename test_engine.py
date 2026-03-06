@@ -2,9 +2,11 @@
 
 import unittest
 
-from engine import Shoe, addCard, bankrollDelta, canSplitCards, compareHandTotals
+from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
+from engine import canSplitCards, compareHandTotals, dealRound
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
-from engine import evaluateInitialBlackjack, resolveInsurance, settleSplitHand, startHand
+from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
+from engine import settleSplitHand, startHand
 
 
 class EngineTests(unittest.TestCase):
@@ -117,6 +119,43 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(res["result"], "dealer_blackjack")
 		self.assertEqual(res["bank_delta"], -20)
 		self.assertTrue(res["round_over"])
+
+	def test_deal_round(self):
+		shoe = Shoe(1)
+		state = dealRound(shoe, bank=100, bet=10)
+		self.assertIsInstance(state, RoundState)
+		self.assertEqual(state.bank, 100)
+		self.assertEqual(state.bet, 10)
+		self.assertEqual(len(state.player_hand), 2)
+		self.assertEqual(len(state.dealer_hand), 2)
+		self.assertEqual(len(state.player_cards), 2)
+		self.assertEqual(len(state.dealer_cards), 2)
+		self.assertEqual(len(shoe.deck), 48)
+
+	def test_apply_action(self):
+		state = RoundState(bank=100, bet=10)
+		updated = applyAction(state, "dd", hand_total=18, handsplit=[18, 17, 0, 0], bank_delta=-10)
+		self.assertEqual(updated.choice, "dd")
+		self.assertEqual(updated.player_total, 18)
+		self.assertEqual(updated.handsplit, [18, 17, 0, 0])
+		self.assertEqual(updated.bank, 90)
+
+	def test_resolve_round(self):
+		state = RoundState(bank=100, bet=10, player_total=19, choice="s", charlie_paid=False)
+		resolution = resolveRound(state, dealer_total=18)
+		self.assertEqual(resolution.outcome, "win")
+		self.assertEqual(resolution.bank_delta, 10)
+
+		split_state = RoundState(
+			bank=100,
+			bet=10,
+			choice="sp",
+			handsplit=[20, 18, 0, 1],
+		)
+		split_resolution = resolveRound(split_state, dealer_total=19)
+		self.assertEqual(split_resolution.outcome, "split")
+		self.assertEqual(split_resolution.split_results[0][0], "win")
+		self.assertEqual(split_resolution.split_results[1][0], "lose")
 
 
 if __name__ == "__main__":

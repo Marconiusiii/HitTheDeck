@@ -2,10 +2,8 @@
 
 import os
 import random
-from engine import Shoe, canSplitCards, handValue, isBlackjack
-from engine import bankrollDelta, compareHandTotals, settleSplitHand
-from engine import drawCardToHand, startHand
-from engine import evaluateInitialBlackjack, resolveInsurance
+from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBlackjack
+from engine import drawCardToHand, evaluateInitialBlackjack, resolveInsurance, resolveRound
 
 # Version Number
 version = "5.0.0"
@@ -241,81 +239,77 @@ def playerActionPrompt(can_split):
 	return input(">  ")
 
 
-def resolvePlayerTurn(can_split, playerHand, handVal, bank, bet, dVal, shoe):
-	handsplit = None
+def resolvePlayerTurn(can_split, state, dVal, shoe):
 	while True:
 		choice = playerActionPrompt(can_split)
 		if choice == 'h' or choice == 'H':
-			handVal = hit(playerHand, handVal, shoe)
+			handVal = hit(state.player_hand, state.player_total, shoe)
+			applyAction(state, choice, hand_total=handVal)
 			break
 		elif choice.lower() == "x":
 			quitGame()
 		elif can_split and choice == 'sp':
-			if bank - bet*2 < 0:
+			if state.bank - state.bet*2 < 0:
 				print("You don't have enough chips for that!\nTry hitting instead, you silly goose!")
-				handVal = hit(playerHand, handVal, shoe)
+				handVal = hit(state.player_hand, state.player_total, shoe)
+				applyAction(state, choice, hand_total=handVal)
 			else:
-				handsplit = split(playerHand, shoe)
+				handsplit = split(state.player_hand, shoe)
+				applyAction(state, choice, handsplit=handsplit)
 			break
 		elif (not can_split) and choice == 'sp':
 			print("You can't split those cards! Splitting wasn't even an option, you sneaky bastard!")
 			continue
 		elif choice == 'dd':
-			handVal = doubleDown(playerHand, handVal, shoe)
+			handVal = doubleDown(state.player_hand, state.player_total, shoe)
+			applyAction(state, choice, hand_total=handVal)
 			break
 		elif choice == 'su':
 			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(dVal))
-			bank -= bet/2
+			applyAction(state, choice, bank_delta=-(state.bet / 2))
 			break
 		elif choice == 's':
-			print("You stand on {}.".format(handVal))
+			print("You stand on {}.".format(state.player_total))
+			applyAction(state, choice)
 			break
 		else:
 			print("You can't do that!")
 			continue
-	return choice, handVal, handsplit, bank
+	return state
 
 
-def resolveDealerPhase(choice, handsplit, bank, bet, handVal, dVal, charlie_paid):
-	if choice == 'sp' and bank - bet*2 >= 0:
-		hand1 = handsplit[0]
-		hand2 = handsplit[1]
-		betDouble1 = handsplit[2]
-		betDouble2 = handsplit[3]
-		outcome1, delta1 = settleSplitHand(hand1, dVal, bet, doubled=(betDouble1 == 1))
+def resolveDealerPhase(state, dVal):
+	resolution = resolveRound(state, dVal)
+	if resolution.outcome == "split":
+		outcome1, delta1 = resolution.split_results[0]
+		outcome2, delta2 = resolution.split_results[1]
 		if outcome1 == "lose":
 			print("Your first hand loses!")
 		elif outcome1 == "push":
 			print("Your first hand is a push!")
 		else:
 			print("You win with your first hand!")
-		bank += delta1
-
-		outcome2, delta2 = settleSplitHand(hand2, dVal, bet, doubled=(betDouble2 == 1))
 		if outcome2 == "lose":
 			print("Your second hand loses!")
-			bank += delta2
-			return bank
 		elif outcome2 == "push":
 			print("Your second hand pushes!")
-			return bank
 		else:
-			bank += delta2
 			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
-			return bank
+		state.bank += resolution.bank_delta
+		return state
 
-	outcome = compareHandTotals(handVal, dVal)
+	outcome = resolution.outcome
 	if outcome == "lose":
 		print(lose[random.randint(0, len(lose)-1)])
 	elif outcome == "push":
 		print("It's a push!")
 	else:
-		if dVal >= 22 and handVal <= 21:
+		if dVal >= 22 and state.player_total <= 21:
 			print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
 		else:
 			print(win[random.randint(0, len(win)-1)])
-	bank += bankrollDelta(outcome, bet, doubled=(choice == 'dd'), charlie_paid=charlie_paid)
-	return bank
+	state.bank += resolution.bank_delta
+	return state
 
 bet = 0
 bank = initBank = 0
@@ -414,28 +408,24 @@ while True:
 		shoe.reset()
 		print("\nShuffling!\n")
 		shoe.count_actual = 0
-	charlie_paid = False
-	card1, x = shoe.draw()
-	card2, y = shoe.draw()
-	shoe.counter(x)
-	shoe.counter(y)
-
-	dCard1, d1 = shoe.draw()
-	dCard2, d2 = shoe.draw()
-	shoe.counter(d1)
-	shoe.counter(d2)
-	dealerHand = [d1, d2]
-	dVal = handValue([11 if card == 1 else card for card in dealerHand])
-
-	playerHand, handVal = startHand(x, y)
+	state = dealRound(shoe, bank, bet)
+	state.charlie_paid = False
+	card1, card2 = state.player_cards
+	dCard1, dCard2 = state.dealer_cards
+	playerHand = state.player_hand
+	handVal = state.player_total
+	dealerHand = state.dealer_hand
+	d1, d2 = dealerHand
+	dVal = state.dealer_total
 	dealerBlackjack = isBlackjack(dealerHand)
-	initial_blackjack = evaluateInitialBlackjack(handVal, dealerHand)
+	initial_blackjack = evaluateInitialBlackjack(state.player_total, dealerHand)
 	if initial_blackjack == "push":
 		print("Push! You and the Dealer both have Blackjack.")
 		continue
 	elif initial_blackjack == "player_blackjack":
 		print("Blackjack!\n{win}\nYou drew the {card1} and the {card2} and have shamed the Dealer!\n${chips} coming to you!".format(win=win[random.randint(0, len(win)-1)], card1=card1, card2=card2, chips=bet//2*3))
-		bank += bet//2 * 3
+		state.bank += bet//2 * 3
+		bank = state.bank
 		continue
 
 	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
@@ -450,14 +440,16 @@ while True:
 		else:
 			print("You decline insurance and Dealer checks their cards...")
 		insurance_resolution = resolveInsurance(d2, took_insurance, dealerBlackjack, bet)
-		bank += insurance_resolution["bank_delta"]
+		state.bank += insurance_resolution["bank_delta"]
 		if insurance_resolution["result"] == "insurance_win":
+			bank = state.bank
 			print("Dealer has 21. Insurance wins and offsets your main bet.")
 			continue
 		elif insurance_resolution["result"] == "insurance_lose":
 			print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
 		elif insurance_resolution["result"] == "dealer_blackjack":
 			print("They have 21!\n{}".format(lose[random.randint(0, len(lose)-1)]))
+			bank = state.bank
 			continue
 		else:
 			print("Dealer does not have 21! Phew, carry on.")
@@ -465,29 +457,34 @@ while True:
 		dealer_resolution = resolveInsurance(d2, False, dealerBlackjack, bet)
 		if dealer_resolution["round_over"]:
 			print("Dealer has Blackjack.\n{}".format(lose[random.randint(0, len(lose)-1)]))
-			bank += dealer_resolution["bank_delta"]
+			state.bank += dealer_resolution["bank_delta"]
+			bank = state.bank
 			continue
 
 	# Split Check
 	can_split = canSplitCards(card1, card2)
-	choice, handVal, handsplit, bank = resolvePlayerTurn(can_split, playerHand, handVal, bank, bet, dVal, shoe)
-	if choice == 'su':
+	state = resolvePlayerTurn(can_split, state, dVal, shoe)
+	if state.choice == 'su':
+		bank = state.bank
 		continue
 
-	if handVal >= 22:
+	if state.player_total >= 22:
 		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
-		bank -= bet
+		state.bank -= bet
+		bank = state.bank
 		continue
 
 	# 5 card Charlie
 	if len(playerHand) >= 5:
 		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
-		bank += bet
-		print("You now have ${} in your bank!".format(bank))
-		charlie_paid = True
+		state.bank += bet
+		print("You now have ${} in your bank!".format(state.bank))
+		state.charlie_paid = True
 
 	# Dealer phase
 
 	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	bank = resolveDealerPhase(choice, handsplit, bank, bet, handVal, dVal, charlie_paid)
+	state.dealer_total = dVal
+	state = resolveDealerPhase(state, dVal)
+	bank = state.bank
 	continue

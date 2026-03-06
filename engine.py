@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from dataclasses import dataclass, field
 import random
 
 SUITS = ["Spades", "Clubs", "Hearts", "Diamonds"]
@@ -132,6 +133,86 @@ def resolveInsurance(upcard_value, took_insurance, dealer_blackjack, bet):
 		return {"round_over": True, "bank_delta": -bet, "result": "dealer_blackjack"}
 
 	return {"round_over": False, "bank_delta": 0, "result": "none"}
+
+
+@dataclass
+class RoundState:
+	bank: int
+	bet: int
+	player_hand: list = field(default_factory=list)
+	dealer_hand: list = field(default_factory=list)
+	player_total: int = 0
+	dealer_total: int = 0
+	player_cards: tuple = ("", "")
+	dealer_cards: tuple = ("", "")
+	choice: str = ""
+	handsplit: list = None
+	charlie_paid: bool = False
+
+
+@dataclass
+class RoundResolution:
+	outcome: str
+	bank_delta: int
+	split_results: list = None
+
+
+def dealRound(shoe, bank, bet):
+	card1_name, card1_value = shoe.draw()
+	card2_name, card2_value = shoe.draw()
+	shoe.counter(card1_value)
+	shoe.counter(card2_value)
+
+	dcard1_name, dcard1_value = shoe.draw()
+	dcard2_name, dcard2_value = shoe.draw()
+	shoe.counter(dcard1_value)
+	shoe.counter(dcard2_value)
+
+	player_hand, player_total = startHand(card1_value, card2_value)
+	dealer_hand = [dcard1_value, dcard2_value]
+	dealer_total = handValue([11 if card == 1 else card for card in dealer_hand])
+
+	return RoundState(
+		bank=bank,
+		bet=bet,
+		player_hand=player_hand,
+		dealer_hand=dealer_hand,
+		player_total=player_total,
+		dealer_total=dealer_total,
+		player_cards=(card1_name, card2_name),
+		dealer_cards=(dcard1_name, dcard2_name),
+	)
+
+
+def applyAction(state, choice, hand_total=None, handsplit=None, bank_delta=0):
+	state.choice = choice
+	if hand_total is not None:
+		state.player_total = hand_total
+	if handsplit is not None:
+		state.handsplit = handsplit
+	state.bank += bank_delta
+	return state
+
+
+def resolveRound(state, dealer_total):
+	if state.choice == "sp" and state.handsplit and state.bank - state.bet * 2 >= 0:
+		hand1, hand2, bet_double1, bet_double2 = state.handsplit
+		outcome1, delta1 = settleSplitHand(hand1, dealer_total, state.bet, doubled=(bet_double1 == 1))
+		outcome2, delta2 = settleSplitHand(hand2, dealer_total, state.bet, doubled=(bet_double2 == 1))
+		return RoundResolution(
+			outcome="split",
+			bank_delta=delta1 + delta2,
+			split_results=[(outcome1, delta1), (outcome2, delta2)],
+		)
+
+	outcome = compareHandTotals(state.player_total, dealer_total)
+	delta = bankrollDelta(
+		outcome,
+		state.bet,
+		doubled=(state.choice == "dd"),
+		charlie_paid=state.charlie_paid,
+	)
+	return RoundResolution(outcome=outcome, bank_delta=delta, split_results=None)
 
 
 class Shoe:
