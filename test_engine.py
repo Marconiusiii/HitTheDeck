@@ -5,7 +5,7 @@ import unittest
 from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
 from engine import canSplitCards, compareHandTotals, dealRound
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
-from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
+from engine import evaluateInitialBlackjack, evaluatePlayerTurnOutcome, resolveInsurance, resolveRound
 from engine import settleSplitHand, startHand
 
 
@@ -145,6 +145,7 @@ class EngineTests(unittest.TestCase):
 		resolution = resolveRound(state, dealer_total=18)
 		self.assertEqual(resolution.outcome, "win")
 		self.assertEqual(resolution.bank_delta, 10)
+		self.assertEqual(resolution.events[0]["code"], "player_win")
 
 		split_state = RoundState(
 			bank=100,
@@ -156,6 +157,19 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(split_resolution.outcome, "split")
 		self.assertEqual(split_resolution.split_results[0][0], "win")
 		self.assertEqual(split_resolution.split_results[1][0], "lose")
+		self.assertEqual(split_resolution.events[0]["code"], "split_hand_result")
+		self.assertEqual(split_resolution.events[1]["code"], "split_hand_result")
+
+	def test_evaluate_player_turn_outcome(self):
+		state = RoundState(bank=100, bet=10, choice="su")
+		outcome = evaluatePlayerTurnOutcome(state, dealer_total=18)
+		self.assertTrue(outcome["round_over"])
+		self.assertEqual(outcome["event"]["code"], "player_surrender")
+
+		state = RoundState(bank=100, bet=10, choice="h", player_total=23)
+		outcome = evaluatePlayerTurnOutcome(state, dealer_total=18)
+		self.assertTrue(outcome["round_over"])
+		self.assertEqual(outcome["event"]["code"], "player_bust")
 
 
 if __name__ == "__main__":

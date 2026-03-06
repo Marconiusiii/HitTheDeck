@@ -155,6 +155,7 @@ class RoundResolution:
 	outcome: str
 	bank_delta: int
 	split_results: list = None
+	events: list = field(default_factory=list)
 
 
 def dealRound(shoe, bank, bet):
@@ -194,6 +195,14 @@ def applyAction(state, choice, hand_total=None, handsplit=None, bank_delta=0):
 	return state
 
 
+def evaluatePlayerTurnOutcome(state, dealer_total):
+	if state.choice == "su":
+		return {"round_over": True, "event": {"code": "player_surrender", "dealer_total": dealer_total}}
+	if state.player_total >= 22:
+		return {"round_over": True, "event": {"code": "player_bust", "dealer_total": dealer_total}}
+	return {"round_over": False, "event": None}
+
+
 def resolveRound(state, dealer_total):
 	if state.choice == "sp" and state.handsplit and state.bank - state.bet * 2 >= 0:
 		hand1, hand2, bet_double1, bet_double2 = state.handsplit
@@ -203,6 +212,10 @@ def resolveRound(state, dealer_total):
 			outcome="split",
 			bank_delta=delta1 + delta2,
 			split_results=[(outcome1, delta1), (outcome2, delta2)],
+			events=[
+				{"code": "split_hand_result", "hand_index": 1, "outcome": outcome1},
+				{"code": "split_hand_result", "hand_index": 2, "outcome": outcome2},
+			],
 		)
 
 	outcome = compareHandTotals(state.player_total, dealer_total)
@@ -212,7 +225,15 @@ def resolveRound(state, dealer_total):
 		doubled=(state.choice == "dd"),
 		charlie_paid=state.charlie_paid,
 	)
-	return RoundResolution(outcome=outcome, bank_delta=delta, split_results=None)
+	if outcome == "lose":
+		events = [{"code": "player_lose"}]
+	elif outcome == "push":
+		events = [{"code": "player_push"}]
+	elif dealer_total >= 22 and state.player_total <= 21:
+		events = [{"code": "dealer_bust_win", "dealer_total": dealer_total}]
+	else:
+		events = [{"code": "player_win"}]
+	return RoundResolution(outcome=outcome, bank_delta=delta, split_results=None, events=events)
 
 
 class Shoe:

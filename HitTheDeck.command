@@ -4,6 +4,7 @@ import os
 import random
 from engine import Shoe, applyAction, canSplitCards, dealRound, handValue, isBlackjack
 from engine import drawCardToHand, evaluateInitialBlackjack, resolveInsurance, resolveRound
+from engine import evaluatePlayerTurnOutcome
 
 # Version Number
 version = "5.0.0"
@@ -265,7 +266,6 @@ def resolvePlayerTurn(can_split, state, dVal, shoe):
 			applyAction(state, choice, hand_total=handVal)
 			break
 		elif choice == 'su':
-			print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(dVal))
 			applyAction(state, choice, bank_delta=-(state.bet / 2))
 			break
 		elif choice == 's':
@@ -278,36 +278,43 @@ def resolvePlayerTurn(can_split, state, dVal, shoe):
 	return state
 
 
+def renderRoundEvent(event):
+	code = event["code"]
+	if code == "split_hand_result":
+		hand_index = event["hand_index"]
+		outcome = event["outcome"]
+		if hand_index == 1:
+			if outcome == "lose":
+				print("Your first hand loses!")
+			elif outcome == "push":
+				print("Your first hand is a push!")
+			else:
+				print("You win with your first hand!")
+		else:
+			if outcome == "lose":
+				print("Your second hand loses!")
+			elif outcome == "push":
+				print("Your second hand pushes!")
+			else:
+				print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
+	elif code == "player_lose":
+		print(lose[random.randint(0, len(lose)-1)])
+	elif code == "player_push":
+		print("It's a push!")
+	elif code == "dealer_bust_win":
+		print("Dealer busts with {dealer}!\n{win}".format(dealer=event["dealer_total"], win=win[random.randint(0, len(win)-1)]))
+	elif code == "player_win":
+		print(win[random.randint(0, len(win)-1)])
+	elif code == "player_surrender":
+		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event["dealer_total"]))
+	elif code == "player_bust":
+		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=event["dealer_total"]))
+
+
 def resolveDealerPhase(state, dVal):
 	resolution = resolveRound(state, dVal)
-	if resolution.outcome == "split":
-		outcome1, delta1 = resolution.split_results[0]
-		outcome2, delta2 = resolution.split_results[1]
-		if outcome1 == "lose":
-			print("Your first hand loses!")
-		elif outcome1 == "push":
-			print("Your first hand is a push!")
-		else:
-			print("You win with your first hand!")
-		if outcome2 == "lose":
-			print("Your second hand loses!")
-		elif outcome2 == "push":
-			print("Your second hand pushes!")
-		else:
-			print("Your second hand wins! {}".format(win[random.randint(0, len(win)-1)]))
-		state.bank += resolution.bank_delta
-		return state
-
-	outcome = resolution.outcome
-	if outcome == "lose":
-		print(lose[random.randint(0, len(lose)-1)])
-	elif outcome == "push":
-		print("It's a push!")
-	else:
-		if dVal >= 22 and state.player_total <= 21:
-			print("Dealer busts with {dealer}!\n{win}".format(dealer=dVal, win=win[random.randint(0, len(win)-1)]))
-		else:
-			print(win[random.randint(0, len(win)-1)])
+	for event in resolution.events:
+		renderRoundEvent(event)
 	state.bank += resolution.bank_delta
 	return state
 
@@ -464,13 +471,11 @@ while True:
 	# Split Check
 	can_split = canSplitCards(card1, card2)
 	state = resolvePlayerTurn(can_split, state, dVal, shoe)
-	if state.choice == 'su':
-		bank = state.bank
-		continue
-
-	if state.player_total >= 22:
-		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=lose[random.randint(0, len(lose)-1)], dealer=dVal))
-		state.bank -= bet
+	turn_outcome = evaluatePlayerTurnOutcome(state, dVal)
+	if turn_outcome["round_over"]:
+		renderRoundEvent(turn_outcome["event"])
+		if turn_outcome["event"]["code"] == "player_bust":
+			state.bank -= bet
 		bank = state.bank
 		continue
 
