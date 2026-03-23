@@ -257,6 +257,23 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(result.events[1].code, "playerDraw")
 		self.assertEqual(result.events[-1].code, "playerStand")
 
+	def testRunHitFlowRenderTiming(self):
+		shoe = FakeShoe([
+			("4 of Hearts", 4),
+		])
+		hand = [10, 2]
+		log = []
+		def readChoice(promptKey, total, canSplit=False):
+			log.append(("prompt", promptKey, total))
+			return "s"
+		def renderEvent(event):
+			log.append(("event", event.code, event.total))
+		result = runHitFlow(shoe, hand, 12, readChoice, renderEvent)
+		self.assertEqual(result.total, 16)
+		self.assertEqual(log[0], ("event", "playerDraw", 16))
+		self.assertEqual(log[1], ("prompt", "hitStand", 16))
+		self.assertEqual(log[2], ("event", "playerStand", 16))
+
 	def testRunDdFlow(self):
 		shoe = FakeShoe([("9 of Clubs", 9)])
 		hand = [5, 6]
@@ -282,6 +299,27 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(result.events[1].code, "splitDraw")
 		self.assertEqual(result.events[2].code, "splitStand")
 		self.assertEqual(result.events[-1].code, "splitDd")
+
+	def testRunSplitFlowRenderTiming(self):
+		shoe = FakeShoe([
+			("3 of Hearts", 3),
+			("4 of Clubs", 4),
+			("5 of Spades", 5),
+			("9 of Diamonds", 9),
+		])
+		playerHand = [8, 8]
+		log = []
+		choices = iter(["h", "s", "dd"])
+		def readChoice(promptKey, total, canSplit=False):
+			log.append(("prompt", promptKey, total))
+			return next(choices)
+		def renderEvent(event):
+			log.append(("event", event.code, event.total))
+		runSplitFlow(shoe, playerHand, readChoice, renderEvent)
+		self.assertEqual(log[0], ("event", "splitStart", 11))
+		self.assertEqual(log[1], ("prompt", "split1Start", 11))
+		self.assertEqual(log[2], ("event", "splitDraw", 16))
+		self.assertEqual(log[3], ("prompt", "hitStand", 16))
 
 	def testResolveTurnFlow(self):
 		shoe = FakeShoe([("4 of Hearts", 4)])
