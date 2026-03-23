@@ -249,15 +249,15 @@ def runRoundFlow(session):
 			state.bank += dealerRes.bankDelta
 			session.bank = state.bank
 			return session
-		turnRes = resolveTurnFlow(
-			card1.split()[0] == card2.split()[0],
-			state,
-			session.shoe,
-			readTurnChoice,
-			renderPlayEvent,
-		)
-		if turnRes.quit:
-			quitGame()
+	turnRes = resolveTurnFlow(
+		card1.split()[0] == card2.split()[0],
+		state,
+		session.shoe,
+		readTurnChoice,
+		renderPlayEvent,
+	)
+	if turnRes.quit:
+		quitGame()
 	state = turnRes.state
 	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, session.bet, session.shoe)
 	session.bank = state.bank
