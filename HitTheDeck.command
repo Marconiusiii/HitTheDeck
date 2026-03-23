@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-from engine import dealRound, handValue, isBlackjack
+from engine import ActionChoice, ActionType, dealRound, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evalTurnOut
-from engine import playDealerTurn, resolveTurnFlow
-from engine import parseBankInput, parseDeckCount, startSession
+from engine import parseBankInput, parseDeckCount, parsePlayerIntent, playDealerTurn
+from engine import resolveTurnFlow, startSession
 from ui import pickLoseMsg, promptIns, renderInitBj, renderInsRes, renderRoundEvent, uiTxt
 
 # Version Number
@@ -55,17 +55,22 @@ def playerActionPrompt(canSplit):
 	return readInput(">  ")
 
 
-def readTurnChoice(promptKey, total, canSplit=False):
-	if promptKey == "playerAction":
-		return playerActionPrompt(canSplit)
-	if promptKey == "split1Start":
+def readTurnChoice(actionReq):
+	if actionReq.reqType == "playerAction":
+		return parsePlayerIntent(playerActionPrompt(actionReq.canSplit), actionReq.canSplit)
+	if actionReq.reqType == "splitStart" and actionReq.handIdx == 1:
 		print("Hit, Double Down,  or stand on your first hand?")
-		return readInput(">")
-	if promptKey == "split2Start":
+		return parsePlayerIntent(readInput(">"), False)
+	if actionReq.reqType == "splitStart":
 		print("Hit, Double Down, or stand?")
-		return readInput(">")
+		return parsePlayerIntent(readInput(">"), False)
 	print(uiTxt["hitStand"])
-	return readInput(">")
+	rawVal = readInput(">")
+	if rawVal.lower() == "h":
+		return ActionChoice(action=ActionType.hit, rawVal=rawVal)
+	if rawVal.lower() == "s":
+		return ActionChoice(action=ActionType.stand, rawVal=rawVal)
+	return ActionChoice(action=ActionType.stand, rawVal=rawVal)
 
 
 def renderPlayEvent(event):
