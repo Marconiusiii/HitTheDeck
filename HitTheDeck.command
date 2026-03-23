@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-from engine import applyAction, canSplitCards, dealRound, handValue, isBlackjack
-from engine import applyNonSplitIntent, parsePlayerIntent
+from engine import dealRound, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
 from engine import evalTurnOut
-from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, startSplitHands
-from engine import resolveSplitHandIntent
+from engine import playDealerTurn, resolveTurnFlow
 from engine import parseBankInput, parseDeckCount, startSession
 from ui import pickLoseMsg, promptIns, renderInitBj, renderInsRes, renderRoundEvent, uiTxt
 
@@ -34,48 +32,6 @@ def readInput(promptTxt):
 			continue
 		return userIn
 
-def runStepLoop(stepFn):
-	while True:
-		loopRes = stepFn()
-		if loopRes["done"]:
-			return loopRes
-
-def runChoiceLoop(startChoice, stepFn):
-	choice = startChoice
-	while True:
-		loopRes = stepFn(choice)
-		if loopRes["done"]:
-			return loopRes
-		choice = loopRes["nextChoice"]
-
-# Hit function
-def hit(playerHand, handVal, shoe):
-	def doStep():
-		nonlocal handVal
-		step = playerHitStep(shoe, playerHand)
-		print("You drew the {card} and now have {hand}.".format(card=step["cardName"], hand=step["total"]))
-		handVal = step["total"]
-		if step["bust"]:
-			return {"done": True}
-		elif step["blackjack"]:
-			print("Sanding on 21, stop hitting me!")
-			return {"done": True}
-		#print("True Count: {}".format(shoe.countNow))
-		print(uiTxt["hitStand"])
-		hitAgain = readInput(">")
-		if hitAgain == 'h':
-			return {"done": False}
-		print("You stand on {}.".format(handVal))
-		return {"done": True}
-	runStepLoop(doStep)
-	return handVal
-
-#Double Down function
-def doubleDown(playerHand, handVal, shoe):
-	step = playerDoubleDownStep(shoe, playerHand)
-	print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=step["cardName"], hand=step["total"]))
-	return step["total"]
-
 #Dealer engine
 def dealer(dCard1, dCard2, dealerHand, shoe):
 	openTotal = handValue([11 if card == 1 else card for card in dealerHand])
@@ -91,76 +47,6 @@ def dealer(dCard1, dCard2, dealerHand, shoe):
 		print("Dealer stands on {}.".format(dVal))
 	return dealerRes["finalTotal"]
 
-# Split function
-def split(playerHand, shoe):
-	betDouble1 = betDouble2 = 0
-	splitStart = startSplitHands(shoe, playerHand)
-	spCard1 = splitStart["firstDrawCard"]
-	spCard2 = splitStart["secondDrawCard"]
-	handSP1 = splitStart["hand1"]
-	handSP2 = splitStart["hand2"]
-	hand1 = splitStart["total1"]
-	hand2 = splitStart["total2"]
-	print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=spCard1, hand=hand1))
-	print("Hit, Double Down,  or stand on your first hand?")
-	h1 = readInput(">")
-	def stepHand1(choice):
-		nonlocal hand1, betDouble1
-		result1 = resolveSplitHandIntent(choice, shoe, handSP1, hand1)
-		hand1 = result1["total"]
-		if result1["invalid"]:
-			return {"done": True}
-		if result1["intent"] == "h":
-			print("You drew the {card} and now have {hand}.".format(card=result1["drawCard"], hand=hand1))
-			if result1["bust"]:
-				print("You bust on your first hand with {}!.".format(hand1))
-				return {"done": True}
-			print(uiTxt["hitStand"])
-			return {"done": False, "nextChoice": readInput(">")}
-		if result1["intent"] == "dd":
-			betDouble1 += 1
-			if result1["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=result1["drawCard"], hand=hand1))
-			else:
-				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=result1["drawCard"], hand=hand1))
-			return {"done": True}
-		if result1["intent"] == "s":
-			print("You stand on your first hand with {}.".format(hand1))
-			return {"done": True}
-		return {"done": True}
-	runChoiceLoop(h1, stepHand1)
-	print("You drew the {card2} for your second hand and now have {hand}.".format(card2=spCard2, hand=hand2))
-	print("Hit, Double Down, or stand?")
-	h2 = readInput(">")
-	def stepHand2(choice):
-		nonlocal hand2, betDouble2
-		result2 = resolveSplitHandIntent(choice, shoe, handSP2, hand2)
-		hand2 = result2["total"]
-		if result2["invalid"]:
-			return {"done": True}
-		if result2["intent"] == "h":
-			print("You drew the {card} and now have {hand}.".format(card=result2["drawCard"], hand=hand2))
-			if result2["bust"]:
-				print("You bust on your second hand with {}!.".format(hand2))
-				return {"done": True}
-			print(uiTxt["hitStand"])
-			return {"done": False, "nextChoice": readInput(">")}
-		if result2["intent"] == "dd":
-			betDouble2 += 1
-			if result2["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=result2["drawCard"], hand=hand2))
-			else:
-				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=result2["drawCard"], hand=hand2))
-			return {"done": True}
-		if result2["intent"] == "s":
-			print("You stand on your second hand with a total of {}.".format(hand2))
-			return {"done": True}
-		return {"done": True}
-	runChoiceLoop(h2, stepHand2)
-
-	return [hand1, hand2, betDouble1, betDouble2]
-
-
 def playerActionPrompt(canSplit):
 	if canSplit:
 		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n(q) to Quit.")
@@ -169,44 +55,64 @@ def playerActionPrompt(canSplit):
 	return readInput(">  ")
 
 
-def resolvePlayerTurn(canSplit, state, dVal, shoe):
-	while True:
-		choice = playerActionPrompt(canSplit)
-		intentRes = parsePlayerIntent(choice, canSplit)
-		if intentRes["invalid"]:
-			if intentRes["splitBlock"]:
-				print(uiTxt["splitBlk"])
+def readTurnChoice(promptKey, total, canSplit=False):
+	if promptKey == "playerAction":
+		return playerActionPrompt(canSplit)
+	if promptKey == "split1Start":
+		print("Hit, Double Down,  or stand on your first hand?")
+		return readInput(">")
+	if promptKey == "split2Start":
+		print("Hit, Double Down, or stand?")
+		return readInput(">")
+	print(uiTxt["hitStand"])
+	return readInput(">")
+
+
+def renderPlayEvent(event):
+	code = event["code"]
+	if code == "invalidChoice":
+		if event["splitBlock"]:
+			print(uiTxt["splitBlk"])
+		else:
+			print(uiTxt["cantDo"])
+	elif code == "splitNoFunds":
+		print(uiTxt["noFundsSplit"])
+	elif code == "playerDraw":
+		print("You drew the {card} and now have {hand}.".format(card=event["cardName"], hand=event["total"]))
+	elif code == "playerTwentyOne":
+		print("Sanding on 21, stop hitting me!")
+	elif code == "playerStand":
+		print("You stand on {}.".format(event["total"]))
+	elif code == "playerDd":
+		print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=event["cardName"], hand=event["total"]))
+	elif code == "splitStart":
+		if event["handIdx"] == 1:
+			print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=event["cardName"], hand=event["total"]))
+		else:
+			print("You drew the {card2} for your second hand and now have {hand}.".format(card2=event["cardName"], hand=event["total"]))
+	elif code == "splitDraw":
+		print("You drew the {card} and now have {hand}.".format(card=event["cardName"], hand=event["total"]))
+	elif code == "splitBust":
+		if event["handIdx"] == 1:
+			print("You bust on your first hand with {}!.".format(event["total"]))
+		else:
+			print("You bust on your second hand with {}!.".format(event["total"]))
+	elif code == "splitDd":
+		if event["handIdx"] == 1:
+			if event["bust"]:
+				print("You drew the {card} and bust with {hand}!".format(card=event["cardName"], hand=event["total"]))
 			else:
-				print(uiTxt["cantDo"])
-			continue
-		intent = intentRes["intent"]
-		if intent == "quit":
-			quitGame()
-		elif intent == "hit":
-			handVal = hit(state.playerHand, state.playerTotal, shoe)
-			applyNonSplitIntent(state, intent, handTotal=handVal)
-			break
-		elif intent == "split":
-			if state.bank - state.bet*2 < 0:
-				print(uiTxt["noFundsSplit"])
-				handVal = hit(state.playerHand, state.playerTotal, shoe)
-				applyNonSplitIntent(state, "hit", handTotal=handVal)
+				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=event["cardName"], hand=event["total"]))
+		else:
+			if event["bust"]:
+				print("You drew the {card} and bust with {hand}!".format(card=event["cardName"], hand=event["total"]))
 			else:
-				handsplit = split(state.playerHand, shoe)
-				applyAction(state, "sp", handsplit=handsplit)
-			break
-		elif intent == "doubleDn":
-			handVal = doubleDown(state.playerHand, state.playerTotal, shoe)
-			applyNonSplitIntent(state, intent, handTotal=handVal)
-			break
-		elif intent == "surrender":
-			applyNonSplitIntent(state, intent)
-			break
-		elif intent == "stand":
-			print("You stand on {}.".format(state.playerTotal))
-			applyNonSplitIntent(state, intent)
-			break
-	return state
+				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=event["cardName"], hand=event["total"]))
+	elif code == "splitStand":
+		if event["handIdx"] == 1:
+			print("You stand on your first hand with {}.".format(event["total"]))
+		else:
+			print("You stand on your second hand with a total of {}.".format(event["total"]))
 
 
 def resolveDealerPhase(state, dVal):
@@ -318,7 +224,7 @@ def runRoundFlow(shoe, bank, bet):
 	playerHand = state.playerHand
 	handVal = state.playerTotal
 	dealerHand = state.dealerHand
-	d1, d2 = dealerHand
+	d2 = dealerHand[1]
 	dVal = state.dealerTotal
 	dealerBlackjack = isBlackjack(dealerHand)
 	initBj = evaluateInitialBlackjack(state.playerTotal, dealerHand)
@@ -338,8 +244,17 @@ def runRoundFlow(shoe, bank, bet):
 			print("Dealer has Blackjack.\n{}".format(pickLoseMsg()))
 			state.bank += dealerRes["bankDelta"]
 			return state.bank
-	canSplit = canSplitCards(card1, card2)
-	state = resolvePlayerTurn(canSplit, state, dVal, shoe)
+	turnRes = resolveTurnFlow(
+		card1.split()[0] == card2.split()[0],
+		state,
+		shoe,
+		readTurnChoice,
+	)
+	for event in turnRes["events"]:
+		renderPlayEvent(event)
+	if turnRes["quit"]:
+		quitGame()
+	state = turnRes["state"]
 	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
 	return state.bank
 

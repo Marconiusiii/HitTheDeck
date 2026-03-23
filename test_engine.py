@@ -9,7 +9,21 @@ from engine import parseDeckCount, startSession
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evalTurnOut, resolveInsurance, resolveRound
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, settleSplitHand
-from engine import resolveSplitHandIntent, startHand, startSplitHands
+from engine import resolveSplitHandIntent, resolveTurnFlow, runDdFlow, runHitFlow
+from engine import runSplitFlow, startHand, startSplitHands
+
+
+class FakeShoe:
+	def __init__(self, draws):
+		self.draws = list(draws)
+		self.cardCnt = 0
+		self.countNow = 0
+
+	def draw(self):
+		return self.draws.pop(0)
+
+	def counter(self, card):
+		return card
 
 
 class EngineTests(unittest.TestCase):
@@ -226,6 +240,72 @@ class EngineTests(unittest.TestCase):
 
 		result = resolveSplitHandIntent("bad", shoe, hand, result["total"])
 		self.assertTrue(result["invalid"])
+
+	def testRunHitFlow(self):
+		shoe = FakeShoe([
+			("4 of Hearts", 4),
+			("2 of Clubs", 2),
+		])
+		hand = [10, 2]
+		choices = iter(["h", "s"])
+		def readChoice(promptKey, total, canSplit=False):
+			self.assertEqual(promptKey, "hitStand")
+			return next(choices)
+		result = runHitFlow(shoe, hand, 12, readChoice)
+		self.assertEqual(result["total"], 18)
+		self.assertEqual(result["events"][0]["code"], "playerDraw")
+		self.assertEqual(result["events"][1]["code"], "playerDraw")
+		self.assertEqual(result["events"][-1]["code"], "playerStand")
+
+	def testRunDdFlow(self):
+		shoe = FakeShoe([("9 of Clubs", 9)])
+		hand = [5, 6]
+		result = runDdFlow(shoe, hand)
+		self.assertEqual(result["total"], 20)
+		self.assertEqual(result["events"][0]["code"], "playerDd")
+		self.assertFalse(result["events"][0]["bust"])
+
+	def testRunSplitFlow(self):
+		shoe = FakeShoe([
+			("3 of Hearts", 3),
+			("4 of Clubs", 4),
+			("5 of Spades", 5),
+			("9 of Diamonds", 9),
+		])
+		playerHand = [8, 8]
+		choices = iter(["h", "s", "dd"])
+		def readChoice(promptKey, total, canSplit=False):
+			return next(choices)
+		result = runSplitFlow(shoe, playerHand, readChoice)
+		self.assertEqual(result["handsplit"], [16, 21, 0, 1])
+		self.assertEqual(result["events"][0]["code"], "splitStart")
+		self.assertEqual(result["events"][1]["code"], "splitDraw")
+		self.assertEqual(result["events"][2]["code"], "splitStand")
+		self.assertEqual(result["events"][-1]["code"], "splitDd")
+
+	def testResolveTurnFlow(self):
+		shoe = FakeShoe([("4 of Hearts", 4)])
+		state = RoundState(bank=100, bet=10, playerHand=[10, 2], playerTotal=12)
+		choices = iter(["h", "s"])
+		def readChoice(promptKey, total, canSplit=False):
+			return next(choices)
+		result = resolveTurnFlow(False, state, shoe, readChoice)
+		self.assertFalse(result["quit"])
+		self.assertEqual(result["state"].choice, "h")
+		self.assertEqual(result["state"].playerTotal, 16)
+		self.assertEqual(result["events"][0]["code"], "playerDraw")
+		self.assertEqual(result["events"][-1]["code"], "playerStand")
+
+	def testResolveTurnFlowSplitNoFunds(self):
+		shoe = FakeShoe([("5 of Hearts", 5)])
+		state = RoundState(bank=15, bet=10, playerHand=[8, 8], playerTotal=16)
+		choices = iter(["sp", "s"])
+		def readChoice(promptKey, total, canSplit=False):
+			return next(choices)
+		result = resolveTurnFlow(True, state, shoe, readChoice)
+		self.assertEqual(result["events"][0]["code"], "splitNoFunds")
+		self.assertEqual(result["state"].choice, "h")
+		self.assertEqual(result["state"].playerTotal, 21)
 
 	def testParseIntent(self):
 		self.assertEqual(parsePlayerIntent("h", False)["intent"], "hit")

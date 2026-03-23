@@ -192,6 +192,122 @@ def resolveSplitHandIntent(choice, shoe, hand, curTotal):
 	return result
 
 
+def runHitFlow(shoe, playerHand, handTotal, readChoiceFn):
+	total = handTotal
+	events = []
+	while True:
+		step = playerHitStep(shoe, playerHand)
+		total = step["total"]
+		events.append({"code": "playerDraw", "cardName": step["cardName"], "total": total})
+		if step["bust"]:
+			events.append({"code": "playerBustNow", "total": total})
+			return {"total": total, "events": events}
+		if step["blackjack"]:
+			events.append({"code": "playerTwentyOne"})
+			return {"total": total, "events": events}
+		nextChoice = readChoiceFn("hitStand", total)
+		if nextChoice.lower() == "h":
+			continue
+		events.append({"code": "playerStand", "total": total})
+		return {"total": total, "events": events}
+
+
+def runDdFlow(shoe, playerHand):
+	step = playerDoubleDownStep(shoe, playerHand)
+	return {
+		"total": step["total"],
+		"events": [{
+			"code": "playerDd",
+			"cardName": step["cardName"],
+			"total": step["total"],
+			"bust": step["bust"],
+		}],
+	}
+
+
+def runSplitHand(shoe, hand, handIdx, handTotal, startChoice, readChoiceFn):
+	total = handTotal
+	betDbl = 0
+	choice = startChoice
+	events = []
+	while True:
+		result = resolveSplitHandIntent(choice, shoe, hand, total)
+		total = result["total"]
+		if result["invalid"]:
+			events.append({"code": "splitInvalid", "handIdx": handIdx})
+			return {"total": total, "betDbl": betDbl, "events": events}
+		if result["intent"] == "h":
+			events.append({
+				"code": "splitDraw",
+				"handIdx": handIdx,
+				"cardName": result["drawCard"],
+				"total": total,
+			})
+			if result["bust"]:
+				events.append({"code": "splitBust", "handIdx": handIdx, "total": total})
+				return {"total": total, "betDbl": betDbl, "events": events}
+			choice = readChoiceFn("hitStand", total)
+			continue
+		if result["intent"] == "dd":
+			betDbl = 1
+			events.append({
+				"code": "splitDd",
+				"handIdx": handIdx,
+				"cardName": result["drawCard"],
+				"total": total,
+				"bust": result["bust"],
+			})
+			return {"total": total, "betDbl": betDbl, "events": events}
+		if result["intent"] == "s":
+			events.append({"code": "splitStand", "handIdx": handIdx, "total": total})
+			return {"total": total, "betDbl": betDbl, "events": events}
+
+
+def runSplitFlow(shoe, playerHand, readChoiceFn):
+	splitStart = startSplitHands(shoe, playerHand)
+	events = [{
+		"code": "splitStart",
+		"handIdx": 1,
+		"cardName": splitStart["firstDrawCard"],
+		"total": splitStart["total1"],
+	}]
+	firstChoice = readChoiceFn("split1Start", splitStart["total1"])
+	firstRes = runSplitHand(
+		shoe,
+		splitStart["hand1"],
+		1,
+		splitStart["total1"],
+		firstChoice,
+		readChoiceFn,
+	)
+	events.extend(firstRes["events"])
+	events.append({
+		"code": "splitStart",
+		"handIdx": 2,
+		"cardName": splitStart["secondDrawCard"],
+		"total": splitStart["total2"],
+	})
+	secondChoice = readChoiceFn("split2Start", splitStart["total2"])
+	secondRes = runSplitHand(
+		shoe,
+		splitStart["hand2"],
+		2,
+		splitStart["total2"],
+		secondChoice,
+		readChoiceFn,
+	)
+	events.extend(secondRes["events"])
+	return {
+		"handsplit": [
+			firstRes["total"],
+			secondRes["total"],
+			firstRes["betDbl"],
+			secondRes["betDbl"],
+		],
+		"events": events,
+	}
+
+
 def parsePlayerIntent(choice, canSplit):
 	intent = choice.lower()
 	if intent == "q":
@@ -225,6 +341,50 @@ def applyNonSplitIntent(state, intent, handTotal=None):
 		applyAction(state, "s")
 		return state
 	return state
+
+
+def resolveTurnFlow(canSplit, state, shoe, readChoiceFn):
+	events = []
+	while True:
+		choice = readChoiceFn("playerAction", state.playerTotal, canSplit)
+		intentRes = parsePlayerIntent(choice, canSplit)
+		if intentRes["invalid"]:
+			events.append({
+				"code": "invalidChoice",
+				"splitBlock": intentRes["splitBlock"],
+			})
+			continue
+		intent = intentRes["intent"]
+		if intent == "quit":
+			return {"state": state, "events": events, "quit": True}
+		if intent == "hit":
+			hitRes = runHitFlow(shoe, state.playerHand, state.playerTotal, readChoiceFn)
+			events.extend(hitRes["events"])
+			applyNonSplitIntent(state, intent, handTotal=hitRes["total"])
+			return {"state": state, "events": events, "quit": False}
+		if intent == "split":
+			if state.bank - state.bet * 2 < 0:
+				events.append({"code": "splitNoFunds"})
+				hitRes = runHitFlow(shoe, state.playerHand, state.playerTotal, readChoiceFn)
+				events.extend(hitRes["events"])
+				applyNonSplitIntent(state, "hit", handTotal=hitRes["total"])
+				return {"state": state, "events": events, "quit": False}
+			splitRes = runSplitFlow(shoe, state.playerHand, readChoiceFn)
+			events.extend(splitRes["events"])
+			applyAction(state, "sp", handsplit=splitRes["handsplit"])
+			return {"state": state, "events": events, "quit": False}
+		if intent == "doubleDn":
+			ddRes = runDdFlow(shoe, state.playerHand)
+			events.extend(ddRes["events"])
+			applyNonSplitIntent(state, intent, handTotal=ddRes["total"])
+			return {"state": state, "events": events, "quit": False}
+		if intent == "surrender":
+			applyNonSplitIntent(state, intent)
+			return {"state": state, "events": events, "quit": False}
+		if intent == "stand":
+			events.append({"code": "playerStand", "total": state.playerTotal})
+			applyNonSplitIntent(state, intent)
+			return {"state": state, "events": events, "quit": False}
 
 
 def parseBankInput(rawVal):
