@@ -277,6 +277,10 @@ def runSplitHand(shoe, hand, handIdx, handTotal, startChoice, readChoiceFn, rend
 			if result["bust"]:
 				recordEvent(events, GameEvent(code="splitBust", handIdx=handIdx, total=total), renderEventFn)
 				return StepOut(total=total, betDbl=betDbl, events=events)
+			if total == 21:
+				recordEvent(events, GameEvent(code="splitTwentyOne", handIdx=handIdx, total=total), renderEventFn)
+				recordEvent(events, GameEvent(code="splitStand", handIdx=handIdx, total=total), renderEventFn)
+				return StepOut(total=total, betDbl=betDbl, events=events)
 			choice = readChoiceFn("hitStand", total)
 			continue
 		if result["intent"] == "dd":

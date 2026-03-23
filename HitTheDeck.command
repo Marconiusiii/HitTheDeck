@@ -92,6 +92,8 @@ def renderPlayEvent(event):
 			print("You drew the {card2} for your second hand and now have {hand}.".format(card2=event.cardName, hand=event.total))
 	elif code == "splitDraw":
 		print("You drew the {card} and now have {hand}.".format(card=event.cardName, hand=event.total))
+	elif code == "splitTwentyOne":
+		print("Sanding on 21, stop hitting me!")
 	elif code == "splitBust":
 		if event.handIdx == 1:
 			print("You bust on your first hand with {}!.".format(event.total))
