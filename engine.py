@@ -408,12 +408,12 @@ def parseDeckCount(rawVal):
 
 
 def startSession(bank, deckAmt):
-	return {
-		"bank": bank,
-		"initBank": bank,
-		"deckAmt": deckAmt,
-		"shoe": Shoe(deckAmt),
-	}
+	return GameSession(
+		bank=bank,
+		initBank=bank,
+		deckAmt=deckAmt,
+		shoe=Shoe(deckAmt),
+	)
 
 
 def evaluateInitialBlackjack(playerTotal, dealerRawCards):
@@ -458,6 +458,16 @@ class RoundState:
 	choice: str = ""
 	handsplit: list = None
 	charliePaid: bool = False
+
+
+@dataclass
+class GameSession:
+	bank: int
+	initBank: int
+	deckAmt: int
+	shoe: object
+	bet: int = 0
+	roundState: object = None
 
 
 @dataclass

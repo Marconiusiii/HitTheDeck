@@ -2,7 +2,7 @@
 
 import unittest
 
-from engine import RoundState, Shoe, addCard, applyAction, bankrollDelta
+from engine import GameSession, RoundState, Shoe, addCard, applyAction, bankrollDelta
 from engine import applyNonSplitIntent, parsePlayerIntent
 from engine import canSplitCards, compareHandTotals, dealRound, parseBankInput
 from engine import parseDeckCount, startSession
@@ -359,10 +359,13 @@ class EngineTests(unittest.TestCase):
 
 	def testStartSession(self):
 		session = startSession(250, 3)
-		self.assertEqual(session["bank"], 250)
-		self.assertEqual(session["initBank"], 250)
-		self.assertEqual(session["deckAmt"], 3)
-		self.assertIn("shoe", session)
+		self.assertIsInstance(session, GameSession)
+		self.assertEqual(session.bank, 250)
+		self.assertEqual(session.initBank, 250)
+		self.assertEqual(session.deckAmt, 3)
+		self.assertIsNotNone(session.shoe)
+		self.assertEqual(session.bet, 0)
+		self.assertIsNone(session.roundState)
 
 
 if __name__ == "__main__":

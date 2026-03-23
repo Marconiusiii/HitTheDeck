@@ -12,10 +12,10 @@ from ui import pickLoseMsg, promptIns, renderInitBj, renderInsRes, renderRoundEv
 version = "5.0.0"
 
 def quitGame():
-	global bank, initBank
-	if bank > initBank:
+	global session
+	if session.bank > session.initBank:
 		print("\nNice work coloring up! Come back soon!\n")
-	elif bank == initBank:
+	elif session.bank == session.initBank:
 		print("\nWell, at least you didn't lose anything! Try again soon!\n")
 	else:
 		print("\nOops, tough loss today. Better luck next time!\n")
@@ -169,12 +169,12 @@ def setupSession():
 		else:
 			print("That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose.")
 			continue
-	session = startSession(bank, deckCnt)
-	return session, deckCnt
+		session = startSession(bank, deckCnt)
+		return session
 
-def runBetFlow(bank, bet):
+def runBetFlow(session):
 	while True:
-		if bank <= 0:
+		if session.bank <= 0:
 			print(uiTxt["outMoney1"])
 			print(uiTxt["outMoney2"])
 			while True:
@@ -182,43 +182,45 @@ def runBetFlow(bank, bet):
 				if addCash.lower() == "q":
 					quitGame()
 				try:
-					bank += +int(addCash)
+					session.bank += +int(addCash)
 				except ValueError:
 					print("That wasn't a number, try again.")
 					continue
-				if bank < 0:
+				if session.bank < 0:
 					print("You fail at math. Try again!")
-					bank = 0
+					session.bank = 0
 					continue
-				print("Great, starting you off again with ${}.".format(bank))
+				print("Great, starting you off again with ${}.".format(session.bank))
 				break
-		if bet == 0:
-			print(uiTxt["betAsk"].format(bank))
+		if session.bet == 0:
+			print(uiTxt["betAsk"].format(session.bank))
 		else:
-			print(uiTxt["betAskRpt"].format(bank=bank, bet=bet))
+			print(uiTxt["betAskRpt"].format(bank=session.bank, bet=session.bet))
 		betIn = readInput("$?")
 		if betIn.lower() == "q":
 			quitGame()
 		try:
 			nextBet = int(betIn)
 		except ValueError:
-			if bet == 0:
+			if session.bet == 0:
 				print(uiTxt["betNone"])
 				continue
-			nextBet = bet
-		if nextBet > bank:
+			nextBet = session.bet
+		if nextBet > session.bank:
 			print("You simply don't have the funds for a bet that size!")
 			continue
 		print("You bet ${bet}.".format(bet=nextBet))
-		return bank, nextBet
+		session.bet = nextBet
+		return session
 
-def runRoundFlow(shoe, bank, bet):
-	if len(shoe.deck) < 15:
-		shoe.reset()
+def runRoundFlow(session):
+	if len(session.shoe.deck) < 15:
+		session.shoe.reset()
 		print("\nShuffling!\n")
-		shoe.countNow = 0
-	state = dealRound(shoe, bank, bet)
+		session.shoe.countNow = 0
+	state = dealRound(session.shoe, session.bank, session.bet)
 	state.charliePaid = False
+	session.roundState = state
 	card1, card2 = state.playerCards
 	dCard1, dCard2 = state.dealerCards
 	playerHand = state.playerHand
@@ -229,25 +231,28 @@ def runRoundFlow(shoe, bank, bet):
 	dealerBlackjack = isBlackjack(dealerHand)
 	initBj = evaluateInitialBlackjack(state.playerTotal, dealerHand)
 	if renderInitBj(initBj, state, card1, card2):
-		return state.bank
+		session.bank = state.bank
+		return session
 	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
 	if d2 == 1:
 		tookIns = promptIns(readInput)
-		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, bet)
+		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, session.bet)
 		state.bank += insRes.bankDelta
-		renderInsRes(insRes, bet)
+		renderInsRes(insRes, session.bet)
 		if insRes.roundOver:
-			return state.bank
+			session.bank = state.bank
+			return session
 	else:
-		dealerRes = resolveInsurance(d2, False, dealerBlackjack, bet)
+		dealerRes = resolveInsurance(d2, False, dealerBlackjack, session.bet)
 		if dealerRes.roundOver:
 			print("Dealer has Blackjack.\n{}".format(pickLoseMsg()))
 			state.bank += dealerRes.bankDelta
-			return state.bank
+			session.bank = state.bank
+			return session
 	turnRes = resolveTurnFlow(
 		card1.split()[0] == card2.split()[0],
 		state,
-		shoe,
+		session.shoe,
 		readTurnChoice,
 	)
 	for event in turnRes.events:
@@ -255,21 +260,19 @@ def runRoundFlow(shoe, bank, bet):
 	if turnRes.quit:
 		quitGame()
 	state = turnRes.state
-	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
-	return state.bank
+	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, session.bet, session.shoe)
+	session.bank = state.bank
+	session.roundState = state
+	return session
 
-bet = 0
-bank = initBank = 0
+session = None
 
 # Game starts here
-session, deckAmount = setupSession()
-shuffle = deckAmount * 52 - 20
-shoe = session["shoe"]
-bank = session["bank"]
-initBank = session["initBank"]
+session = setupSession()
+shuffle = session.deckAmt * 52 - 20
 
 #Play Begins
 while True:
-	bank, bet = runBetFlow(bank, bet)
-	bank = runRoundFlow(shoe, bank, bet)
+	session = runBetFlow(session)
+	session = runRoundFlow(session)
 	continue
