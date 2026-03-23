@@ -184,6 +184,7 @@ class EngineTests(unittest.TestCase):
 		outcome = evalTurnOut(state, dealerTotal=18)
 		self.assertEqual(len(outcome.events), 1)
 		self.assertEqual(outcome.events[0].code, "playerSurr")
+		self.assertEqual(outcome.events[0].returnAmt, 5)
 
 		state = RoundState(bank=100, bet=10, choice="h", playerTotal=23)
 		outcome = evalTurnOut(state, dealerTotal=18)
@@ -398,6 +399,26 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(result.events[0].code, "splitNoFunds")
 		self.assertEqual(result.state.choice, "h")
 		self.assertEqual(result.state.playerTotal, 21)
+
+	def testSurrOnlyInSixDeck(self):
+		reqLog = []
+		state = RoundState(bank=100, bet=10, deckAmt=2, playerHand=[10, 5], playerTotal=15)
+		shoe = FakeShoe([])
+		def readChoice(actionReq):
+			reqLog.append(actionReq)
+			return ActionChoice(action=ActionType.stand)
+		resolveTurnFlow(False, state, shoe, readChoice)
+		self.assertNotIn(ActionType.surrender, reqLog[0].actions)
+
+	def testSurrInSixDeck(self):
+		reqLog = []
+		state = RoundState(bank=100, bet=10, deckAmt=6, playerHand=[10, 5], playerTotal=15)
+		shoe = FakeShoe([])
+		def readChoice(actionReq):
+			reqLog.append(actionReq)
+			return ActionChoice(action=ActionType.stand)
+		resolveTurnFlow(False, state, shoe, readChoice)
+		self.assertIn(ActionType.surrender, reqLog[0].actions)
 
 	def testParseIntent(self):
 		self.assertEqual(parsePlayerIntent("h", False).action, ActionType.hit)

@@ -140,7 +140,7 @@ def renderRoundEvent(event):
 	elif code == "playerWin":
 		print(pickWinMsg())
 	elif code == "playerSurr":
-		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event.dealerTotal))
+		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing! ${} is returned to your bank.\nDealer had {}.".format(event.returnAmt, event.dealerTotal))
 	elif code == "playerBust":
 		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=pickLoseMsg(), dealer=event.dealerTotal))
 

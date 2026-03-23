@@ -9,20 +9,20 @@ This Blackjack game runs in Terminal, iTerm, or whatever shell program you have 
 
 $ python3 HitTheDeck.command
 
-This is a fully featured Blackjack game, containing the ability to Surrender, Split, Double Down, plus has a multi- or single-deck option for play.
+This is a fully featured Blackjack game, containing the ability to Split and Double Down, plus has a multi- or single-deck option for play. Surrender is available in the 6-deck game.
 
 ### Starting the Game
 Start off the game by cashing in money for your bank. You will then be prompted to choose how many decks you'd like to play with. Once chosen, the game starts and will ask you for a bet. You have the option to hit Enter to repeat the last bet you made after a round completes.
 
 ### Playing the Game
-YOU will be dealt two cards and shown the top facing card of the dealer. From here you will have the option to Hit, Stand, Double Down, or Surrender. These are activated using shortcodes that appear next to their names and hitting Enter.
+YOU will be dealt two cards and shown the top facing card of the dealer. From here you will have the option to Hit, Stand, Double Down, and in the 6-deck game, Surrender. These are activated using shortcodes that appear next to their names and hitting Enter.
 
 #### Shortcode Instructions
 * Type *h to Hit.
 * Type *s to Stand.
 * Type *dd to Double Down.
 * Type *sp to Split if you are dealt two cards of the same value.
-* Type *su to Surrender and get half of your bet back.
+* Type *su to Surrender and get half of your bet back in the 6-deck game.
 
 #### Global Command
 * Type *cl at any prompt to clear the screen and re-show the current prompt.

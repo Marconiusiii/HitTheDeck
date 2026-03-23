@@ -128,6 +128,7 @@ class GameEvent:
 	splitBlock: bool = False
 	bust: bool = False
 	dealerTotal: int = 0
+	returnAmt: int = 0
 
 
 @dataclass
@@ -433,12 +434,17 @@ def applyNonSplitIntent(state, intent, handTotal=None):
 
 def resolveTurnFlow(canSplit, state, shoe, readChoiceFn, renderEventFn=None):
 	events = []
+	turnActs = [ActionType.hit, ActionType.doubleDn, ActionType.stand]
+	if state.deckAmt == 6:
+		turnActs.insert(2, ActionType.surrender)
+	if canSplit:
+		turnActs.append(ActionType.split)
 	while True:
 		choice = readChoiceFn(ActionReq(
 			reqType="playerAction",
 			total=state.playerTotal,
 			canSplit=canSplit,
-			actions=((ActionType.hit, ActionType.doubleDn, ActionType.surrender, ActionType.stand, ActionType.split) if canSplit else (ActionType.hit, ActionType.doubleDn, ActionType.surrender, ActionType.stand)),
+			actions=tuple(turnActs),
 		))
 		if choice.invalid:
 			recordEvent(events, GameEvent(code="invalidChoice", splitBlock=choice.splitBlock), renderEventFn)
@@ -538,6 +544,7 @@ def resolveInsurance(upCardVal, tookIns, dealerBj, bet):
 class RoundState:
 	bank: int
 	bet: int
+	deckAmt: int = 1
 	playerHand: list = field(default_factory=list)
 	dealerHand: list = field(default_factory=list)
 	playerTotal: int = 0
@@ -568,7 +575,7 @@ class RoundResolution:
 	events: list = field(default_factory=list)
 
 
-def dealRound(shoe, bank, bet):
+def dealRound(shoe, bank, bet, deckAmt=1):
 	card1Name, card1Val = shoe.draw()
 	card2Name, card2Val = shoe.draw()
 	shoe.counter(card1Val)
@@ -586,6 +593,7 @@ def dealRound(shoe, bank, bet):
 	return RoundState(
 		bank=bank,
 		bet=bet,
+		deckAmt=deckAmt,
 		playerHand=playerHand,
 		dealerHand=dealerHand,
 		playerTotal=playerTotal,
@@ -612,7 +620,7 @@ def setPhase(state, phase):
 
 
 def startRound(session):
-	state = dealRound(session.shoe, session.bank, session.bet)
+	state = dealRound(session.shoe, session.bank, session.bet, session.deckAmt)
 	state.charliePaid = False
 	initBj = evaluateInitialBlackjack(state.playerTotal, state.dealerHand)
 	if initBj != "none":
@@ -669,7 +677,7 @@ def applySettlePhase(state):
 
 def evalTurnOut(state, dealerTotal):
 	if state.choice == "su":
-		return StepOut(total=0, events=[GameEvent(code="playerSurr", dealerTotal=dealerTotal)])
+		return StepOut(total=0, events=[GameEvent(code="playerSurr", dealerTotal=dealerTotal, returnAmt=state.bet // 2)])
 	if state.playerTotal >= 22:
 		return StepOut(total=0, events=[GameEvent(code="playerBust", dealerTotal=dealerTotal)])
 	return StepOut(total=0, events=[])

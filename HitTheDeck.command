@@ -47,17 +47,32 @@ def dealer(dCard1, dCard2, dealerHand, shoe):
 		print("Dealer stands on {}.".format(dVal))
 	return dealerRes.total
 
-def playerActionPrompt(canSplit):
-	if canSplit:
-		print("Hit(h), Split(sp), Double Down(dd), Surrender(su), or Stand(s)?\n(q) to Quit.")
+def playerActionPrompt(actionReq):
+	acts = []
+	if ActionType.hit in actionReq.actions:
+		acts.append("Hit(h)")
+	if ActionType.split in actionReq.actions:
+		acts.append("Split(sp)")
+	if ActionType.doubleDn in actionReq.actions:
+		acts.append("Double Down(dd)")
+	if ActionType.surrender in actionReq.actions:
+		acts.append("Surrender(su)")
+	if ActionType.stand in actionReq.actions:
+		acts.append("Stand(s)")
+	if len(acts) == 1:
+		promptTxt = acts[0]
 	else:
-		print("Hit(h), Double Down(dd), Surrender(su), or Stand(s)?\n(q) to Quit.")
+		promptTxt = ", ".join(acts[:-1]) + ", or " + acts[-1]
+	print("{}?\n(q) to Quit.".format(promptTxt))
 	return readInput(">  ")
 
 
 def readTurnChoice(actionReq):
 	if actionReq.reqType == "playerAction":
-		return parsePlayerIntent(playerActionPrompt(actionReq.canSplit), actionReq.canSplit)
+		choice = parsePlayerIntent(playerActionPrompt(actionReq), actionReq.canSplit)
+		if not choice.invalid and choice.action != ActionType.quit and choice.action not in actionReq.actions:
+			return ActionChoice(action=ActionType.invalid, invalid=True, rawVal=choice.rawVal)
+		return choice
 	if actionReq.reqType == "splitStart" and actionReq.handIdx == 1:
 		print("Hit, Double Down,  or stand on your first hand?")
 		return parsePlayerIntent(readInput(">"), False)
