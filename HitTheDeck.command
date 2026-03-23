@@ -38,14 +38,14 @@ def dealer(dCard1, dCard2, dealerHand, shoe):
 	dealerRes = playDealerTurn(shoe, dealerHand)
 	dVal = handValue(dealerHand)
 	print("Dealer has the {card1} and the {card2} for a total of {dealer}.".format(card1=dCard2, card2=dCard1, dealer=openTotal))
-	if dealerRes["events"]:
-		for event in dealerRes["events"]:
-			print("Dealer draws the {card} for a total of {hand}.".format(card=event["cardName"], hand=event["total"]))
-		if 17 <= dealerRes["finalTotal"] <= 21:
-			print("Dealer stands with {}.".format(dealerRes["finalTotal"]))
+	if dealerRes.events:
+		for event in dealerRes.events:
+			print("Dealer draws the {card} for a total of {hand}.".format(card=event.cardName, hand=event.total))
+		if 17 <= dealerRes.total <= 21:
+			print("Dealer stands with {}.".format(dealerRes.total))
 	else:
 		print("Dealer stands on {}.".format(dVal))
-	return dealerRes["finalTotal"]
+	return dealerRes.total
 
 def playerActionPrompt(canSplit):
 	if canSplit:
@@ -69,50 +69,50 @@ def readTurnChoice(promptKey, total, canSplit=False):
 
 
 def renderPlayEvent(event):
-	code = event["code"]
+	code = event.code
 	if code == "invalidChoice":
-		if event["splitBlock"]:
+		if event.splitBlock:
 			print(uiTxt["splitBlk"])
 		else:
 			print(uiTxt["cantDo"])
 	elif code == "splitNoFunds":
 		print(uiTxt["noFundsSplit"])
 	elif code == "playerDraw":
-		print("You drew the {card} and now have {hand}.".format(card=event["cardName"], hand=event["total"]))
+		print("You drew the {card} and now have {hand}.".format(card=event.cardName, hand=event.total))
 	elif code == "playerTwentyOne":
 		print("Sanding on 21, stop hitting me!")
 	elif code == "playerStand":
-		print("You stand on {}.".format(event["total"]))
+		print("You stand on {}.".format(event.total))
 	elif code == "playerDd":
-		print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=event["cardName"], hand=event["total"]))
+		print("You doubled down and drew the {draw} and now have {hand}. Good luck!".format(draw=event.cardName, hand=event.total))
 	elif code == "splitStart":
-		if event["handIdx"] == 1:
-			print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=event["cardName"], hand=event["total"]))
+		if event.handIdx == 1:
+			print("You split and draw the {card1} for your first hand, a total of {hand}.".format(card1=event.cardName, hand=event.total))
 		else:
-			print("You drew the {card2} for your second hand and now have {hand}.".format(card2=event["cardName"], hand=event["total"]))
+			print("You drew the {card2} for your second hand and now have {hand}.".format(card2=event.cardName, hand=event.total))
 	elif code == "splitDraw":
-		print("You drew the {card} and now have {hand}.".format(card=event["cardName"], hand=event["total"]))
+		print("You drew the {card} and now have {hand}.".format(card=event.cardName, hand=event.total))
 	elif code == "splitBust":
-		if event["handIdx"] == 1:
-			print("You bust on your first hand with {}!.".format(event["total"]))
+		if event.handIdx == 1:
+			print("You bust on your first hand with {}!.".format(event.total))
 		else:
-			print("You bust on your second hand with {}!.".format(event["total"]))
+			print("You bust on your second hand with {}!.".format(event.total))
 	elif code == "splitDd":
-		if event["handIdx"] == 1:
-			if event["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=event["cardName"], hand=event["total"]))
+		if event.handIdx == 1:
+			if event.bust:
+				print("You drew the {card} and bust with {hand}!".format(card=event.cardName, hand=event.total))
 			else:
-				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=event["cardName"], hand=event["total"]))
+				print("You double down on your first hand  and draw a {card} for a total of {hand}. Good luck!".format(card=event.cardName, hand=event.total))
 		else:
-			if event["bust"]:
-				print("You drew the {card} and bust with {hand}!".format(card=event["cardName"], hand=event["total"]))
+			if event.bust:
+				print("You drew the {card} and bust with {hand}!".format(card=event.cardName, hand=event.total))
 			else:
-				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=event["cardName"], hand=event["total"]))
+				print("You doubled down on your second hand and drew the {card} for a total of {hand}. Good luck!".format(card=event.cardName, hand=event.total))
 	elif code == "splitStand":
-		if event["handIdx"] == 1:
-			print("You stand on your first hand with {}.".format(event["total"]))
+		if event.handIdx == 1:
+			print("You stand on your first hand with {}.".format(event.total))
 		else:
-			print("You stand on your second hand with a total of {}.".format(event["total"]))
+			print("You stand on your second hand with a total of {}.".format(event.total))
 
 
 def resolveDealerPhase(state, dVal):
@@ -124,9 +124,9 @@ def resolveDealerPhase(state, dVal):
 
 def resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe):
 	turnOut = evalTurnOut(state, dVal)
-	if turnOut["roundOver"]:
-		renderRoundEvent(turnOut["event"])
-		if turnOut["event"]["code"] == "playerBust":
+	if turnOut.events:
+		renderRoundEvent(turnOut.events[0])
+		if turnOut.events[0].code == "playerBust":
 			state.bank -= bet
 		return state
 	if len(playerHand) >= 5:
@@ -234,15 +234,15 @@ def runRoundFlow(shoe, bank, bet):
 	if d2 == 1:
 		tookIns = promptIns(readInput)
 		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, bet)
-		state.bank += insRes["bankDelta"]
+		state.bank += insRes.bankDelta
 		renderInsRes(insRes, bet)
-		if insRes["roundOver"]:
+		if insRes.roundOver:
 			return state.bank
 	else:
 		dealerRes = resolveInsurance(d2, False, dealerBlackjack, bet)
-		if dealerRes["roundOver"]:
+		if dealerRes.roundOver:
 			print("Dealer has Blackjack.\n{}".format(pickLoseMsg()))
-			state.bank += dealerRes["bankDelta"]
+			state.bank += dealerRes.bankDelta
 			return state.bank
 	turnRes = resolveTurnFlow(
 		card1.split()[0] == card2.split()[0],
@@ -250,11 +250,11 @@ def runRoundFlow(shoe, bank, bet):
 		shoe,
 		readTurnChoice,
 	)
-	for event in turnRes["events"]:
+	for event in turnRes.events:
 		renderPlayEvent(event)
-	if turnRes["quit"]:
+	if turnRes.quit:
 		quitGame()
-	state = turnRes["state"]
+	state = turnRes.state
 	state = resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe)
 	return state.bank
 

@@ -123,19 +123,19 @@ class EngineTests(unittest.TestCase):
 
 	def testInsResolve(self):
 		res = resolveInsurance(1, True, True, 20)
-		self.assertEqual(res["result"], "insWin")
-		self.assertEqual(res["bankDelta"], 0)
-		self.assertTrue(res["roundOver"])
+		self.assertEqual(res.result, "insWin")
+		self.assertEqual(res.bankDelta, 0)
+		self.assertTrue(res.roundOver)
 
 		res = resolveInsurance(1, True, False, 20)
-		self.assertEqual(res["result"], "insLose")
-		self.assertEqual(res["bankDelta"], -10)
-		self.assertFalse(res["roundOver"])
+		self.assertEqual(res.result, "insLose")
+		self.assertEqual(res.bankDelta, -10)
+		self.assertFalse(res.roundOver)
 
 		res = resolveInsurance(1, False, True, 20)
-		self.assertEqual(res["result"], "dealerBj")
-		self.assertEqual(res["bankDelta"], -20)
-		self.assertTrue(res["roundOver"])
+		self.assertEqual(res.result, "dealerBj")
+		self.assertEqual(res.bankDelta, -20)
+		self.assertTrue(res.roundOver)
 
 	def testDealRound(self):
 		shoe = Shoe(1)
@@ -162,7 +162,7 @@ class EngineTests(unittest.TestCase):
 		resolution = resolveRound(state, dealerTotal=18)
 		self.assertEqual(resolution.outcome, "win")
 		self.assertEqual(resolution.bankDelta, 10)
-		self.assertEqual(resolution.events[0]["code"], "playerWin")
+		self.assertEqual(resolution.events[0].code, "playerWin")
 
 		splitState = RoundState(
 			bank=100,
@@ -174,42 +174,42 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(splitRes.outcome, "split")
 		self.assertEqual(splitRes.splitRes[0][0], "win")
 		self.assertEqual(splitRes.splitRes[1][0], "lose")
-		self.assertEqual(splitRes.events[0]["code"], "splitHandRes")
-		self.assertEqual(splitRes.events[1]["code"], "splitHandRes")
+		self.assertEqual(splitRes.events[0].code, "splitHandRes")
+		self.assertEqual(splitRes.events[1].code, "splitHandRes")
 
 	def testTurnOutcome(self):
 		state = RoundState(bank=100, bet=10, choice="su")
 		outcome = evalTurnOut(state, dealerTotal=18)
-		self.assertTrue(outcome["roundOver"])
-		self.assertEqual(outcome["event"]["code"], "playerSurr")
+		self.assertEqual(len(outcome.events), 1)
+		self.assertEqual(outcome.events[0].code, "playerSurr")
 
 		state = RoundState(bank=100, bet=10, choice="h", playerTotal=23)
 		outcome = evalTurnOut(state, dealerTotal=18)
-		self.assertTrue(outcome["roundOver"])
-		self.assertEqual(outcome["event"]["code"], "playerBust")
+		self.assertEqual(len(outcome.events), 1)
+		self.assertEqual(outcome.events[0].code, "playerBust")
 
 	def testHitDdSteps(self):
 		shoe = Shoe(1)
 		hand = [10, 5]
 		step = playerHitStep(shoe, hand)
-		self.assertIn("cardName", step)
-		self.assertIn("total", step)
-		self.assertEqual(step["total"], handValue(hand))
+		self.assertTrue(hasattr(step, "cardName"))
+		self.assertTrue(hasattr(step, "total"))
+		self.assertEqual(step.total, handValue(hand))
 
 		hand2 = [9, 2]
 		step2 = playerDoubleDownStep(shoe, hand2)
-		self.assertIn("cardName", step2)
-		self.assertIn("total", step2)
-		self.assertEqual(step2["total"], handValue(hand2))
+		self.assertTrue(hasattr(step2, "cardName"))
+		self.assertTrue(hasattr(step2, "total"))
+		self.assertEqual(step2.total, handValue(hand2))
 
 	def testDealerTurn(self):
 		shoe = Shoe(1)
 		dealerHand = [10, 6]
 		result = playDealerTurn(shoe, dealerHand)
-		self.assertIn("finalTotal", result)
-		self.assertIn("events", result)
-		if result["events"]:
-			self.assertGreaterEqual(result["finalTotal"], 17)
+		self.assertTrue(hasattr(result, "total"))
+		self.assertTrue(hasattr(result, "events"))
+		if result.events:
+			self.assertGreaterEqual(result.total, 17)
 
 	def testStartSplit(self):
 		shoe = Shoe(1)
@@ -252,18 +252,18 @@ class EngineTests(unittest.TestCase):
 			self.assertEqual(promptKey, "hitStand")
 			return next(choices)
 		result = runHitFlow(shoe, hand, 12, readChoice)
-		self.assertEqual(result["total"], 18)
-		self.assertEqual(result["events"][0]["code"], "playerDraw")
-		self.assertEqual(result["events"][1]["code"], "playerDraw")
-		self.assertEqual(result["events"][-1]["code"], "playerStand")
+		self.assertEqual(result.total, 18)
+		self.assertEqual(result.events[0].code, "playerDraw")
+		self.assertEqual(result.events[1].code, "playerDraw")
+		self.assertEqual(result.events[-1].code, "playerStand")
 
 	def testRunDdFlow(self):
 		shoe = FakeShoe([("9 of Clubs", 9)])
 		hand = [5, 6]
 		result = runDdFlow(shoe, hand)
-		self.assertEqual(result["total"], 20)
-		self.assertEqual(result["events"][0]["code"], "playerDd")
-		self.assertFalse(result["events"][0]["bust"])
+		self.assertEqual(result.total, 20)
+		self.assertEqual(result.events[0].code, "playerDd")
+		self.assertFalse(result.events[0].bust)
 
 	def testRunSplitFlow(self):
 		shoe = FakeShoe([
@@ -277,11 +277,11 @@ class EngineTests(unittest.TestCase):
 		def readChoice(promptKey, total, canSplit=False):
 			return next(choices)
 		result = runSplitFlow(shoe, playerHand, readChoice)
-		self.assertEqual(result["handsplit"], [16, 21, 0, 1])
-		self.assertEqual(result["events"][0]["code"], "splitStart")
-		self.assertEqual(result["events"][1]["code"], "splitDraw")
-		self.assertEqual(result["events"][2]["code"], "splitStand")
-		self.assertEqual(result["events"][-1]["code"], "splitDd")
+		self.assertEqual(result.handsplit, [16, 21, 0, 1])
+		self.assertEqual(result.events[0].code, "splitStart")
+		self.assertEqual(result.events[1].code, "splitDraw")
+		self.assertEqual(result.events[2].code, "splitStand")
+		self.assertEqual(result.events[-1].code, "splitDd")
 
 	def testResolveTurnFlow(self):
 		shoe = FakeShoe([("4 of Hearts", 4)])
@@ -290,11 +290,11 @@ class EngineTests(unittest.TestCase):
 		def readChoice(promptKey, total, canSplit=False):
 			return next(choices)
 		result = resolveTurnFlow(False, state, shoe, readChoice)
-		self.assertFalse(result["quit"])
-		self.assertEqual(result["state"].choice, "h")
-		self.assertEqual(result["state"].playerTotal, 16)
-		self.assertEqual(result["events"][0]["code"], "playerDraw")
-		self.assertEqual(result["events"][-1]["code"], "playerStand")
+		self.assertFalse(result.quit)
+		self.assertEqual(result.state.choice, "h")
+		self.assertEqual(result.state.playerTotal, 16)
+		self.assertEqual(result.events[0].code, "playerDraw")
+		self.assertEqual(result.events[-1].code, "playerStand")
 
 	def testResolveTurnFlowSplitNoFunds(self):
 		shoe = FakeShoe([("5 of Hearts", 5)])
@@ -303,9 +303,9 @@ class EngineTests(unittest.TestCase):
 		def readChoice(promptKey, total, canSplit=False):
 			return next(choices)
 		result = resolveTurnFlow(True, state, shoe, readChoice)
-		self.assertEqual(result["events"][0]["code"], "splitNoFunds")
-		self.assertEqual(result["state"].choice, "h")
-		self.assertEqual(result["state"].playerTotal, 21)
+		self.assertEqual(result.events[0].code, "splitNoFunds")
+		self.assertEqual(result.state.choice, "h")
+		self.assertEqual(result.state.playerTotal, 21)
 
 	def testParseIntent(self):
 		self.assertEqual(parsePlayerIntent("h", False)["intent"], "hit")

@@ -113,10 +113,10 @@ def pickLoseMsg():
 	return loseMsg[random.randint(0, len(loseMsg)-1)]
 
 def renderRoundEvent(event):
-	code = event["code"]
+	code = event.code
 	if code == "splitHandRes":
-		handIdx = event["handIdx"]
-		outcome = event["outcome"]
+		handIdx = event.handIdx
+		outcome = event.outcome
 		if handIdx == 1:
 			if outcome == "lose":
 				print("Your first hand loses!")
@@ -136,13 +136,13 @@ def renderRoundEvent(event):
 	elif code == "playerPush":
 		print("It's a push!")
 	elif code == "dealerBustWin":
-		print("Dealer busts with {dealer}!\n{win}".format(dealer=event["dealerTotal"], win=pickWinMsg()))
+		print("Dealer busts with {dealer}!\n{win}".format(dealer=event.dealerTotal, win=pickWinMsg()))
 	elif code == "playerWin":
 		print(pickWinMsg())
 	elif code == "playerSurr":
-		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event["dealerTotal"]))
+		print("You decide to Surrender, chickening out, buggering off, bravely turning your tail and fleeing!\nDealer had {}.".format(event.dealerTotal))
 	elif code == "playerBust":
-		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=pickLoseMsg(), dealer=event["dealerTotal"]))
+		print("You bust!\n{lose}\nDealer had {dealer}.".format(lose=pickLoseMsg(), dealer=event.dealerTotal))
 
 def renderInitBj(outcome, state, card1, card2):
 	if outcome == "push":
@@ -165,11 +165,11 @@ def promptIns(readFn=input):
 	return tookIns
 
 def renderInsRes(result, bet):
-	if result["result"] == "insWin":
+	if result.result == "insWin":
 		print("Dealer has 21. Insurance wins and offsets your main bet.")
-	elif result["result"] == "insLose":
+	elif result.result == "insLose":
 		print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
-	elif result["result"] == "dealerBj":
+	elif result.result == "dealerBj":
 		print("They have 21!\n{}".format(pickLoseMsg()))
 	else:
 		print("Dealer does not have 21! Phew, carry on.")
