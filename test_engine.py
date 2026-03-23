@@ -448,6 +448,11 @@ class EngineTests(unittest.TestCase):
 		self.assertEqual(state.choice, "su")
 		self.assertEqual(state.bank, 95)
 
+		state = RoundState(bank=100, bet=25, playerTotal=15)
+		applyNonSplitIntent(state, "surrender")
+		self.assertEqual(state.choice, "su")
+		self.assertEqual(state.bank, 88)
+
 		applyNonSplitIntent(state, "stand")
 		self.assertEqual(state.choice, "s")
 

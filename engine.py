@@ -424,7 +424,7 @@ def applyNonSplitIntent(state, intent, handTotal=None):
 		applyAction(state, "dd", handTotal=handTotal)
 		return state
 	if intent == ActionType.surrender:
-		applyAction(state, "su", bankDelta=-(state.bet / 2))
+		applyAction(state, "su", bankDelta=-(state.bet // 2))
 		return state
 	if intent == ActionType.stand:
 		applyAction(state, "s")
