@@ -162,6 +162,15 @@ class ActionType:
 	invalid = "invalid"
 
 
+class RoundPhase:
+	deal = "deal"
+	insurance = "insurance"
+	playerTurn = "playerTurn"
+	dealerTurn = "dealerTurn"
+	settle = "settle"
+	roundOver = "roundOver"
+
+
 @dataclass
 class ActionChoice:
 	action: str
@@ -538,6 +547,7 @@ class RoundState:
 	choice: str = ""
 	handsplit: list = None
 	charliePaid: bool = False
+	phase: str = RoundPhase.deal
 
 
 @dataclass
@@ -582,6 +592,7 @@ def dealRound(shoe, bank, bet):
 		dealerTotal=dealerTotal,
 		playerCards=(card1Name, card2Name),
 		dealerCards=(dCard1Name, dCard2Name),
+		phase=RoundPhase.deal,
 	)
 
 
@@ -593,6 +604,67 @@ def applyAction(state, choice, handTotal=None, handsplit=None, bankDelta=0):
 		state.handsplit = handsplit
 	state.bank += bankDelta
 	return state
+
+
+def setPhase(state, phase):
+	state.phase = phase
+	return state
+
+
+def startRound(session):
+	state = dealRound(session.shoe, session.bank, session.bet)
+	state.charliePaid = False
+	initBj = evaluateInitialBlackjack(state.playerTotal, state.dealerHand)
+	if initBj != "none":
+		state.phase = RoundPhase.roundOver
+	elif state.dealerHand[1] == 1:
+		state.phase = RoundPhase.insurance
+	else:
+		state.phase = RoundPhase.playerTurn
+	session.roundState = state
+	return state, initBj
+
+
+def applyInsPhase(state, tookIns):
+	dealerBj = isBlackjack(state.dealerHand)
+	insRes = resolveInsurance(state.dealerHand[1], tookIns, dealerBj, state.bet)
+	state.bank += insRes.bankDelta
+	if insRes.roundOver:
+		state.phase = RoundPhase.roundOver
+	else:
+		state.phase = RoundPhase.playerTurn
+	return insRes
+
+
+def applyTurnPhase(state, shoe, readChoiceFn, renderEventFn=None):
+	turnRes = resolveTurnFlow(
+		cardRank(state.playerCards[0]) == cardRank(state.playerCards[1]),
+		state,
+		shoe,
+		readChoiceFn,
+		renderEventFn,
+	)
+	if not turnRes.quit:
+		turnOut = evalTurnOut(turnRes.state, turnRes.state.dealerTotal)
+		if turnOut.events:
+			turnRes.state.phase = RoundPhase.roundOver
+		else:
+			turnRes.state.phase = RoundPhase.dealerTurn
+	return turnRes
+
+
+def applyDealerPhase(state, shoe):
+	dealerRes = playDealerTurn(shoe, state.dealerHand)
+	state.dealerTotal = dealerRes.total
+	state.phase = RoundPhase.settle
+	return dealerRes
+
+
+def applySettlePhase(state):
+	resolution = resolveRound(state, state.dealerTotal)
+	state.bank += resolution.bankDelta
+	state.phase = RoundPhase.roundOver
+	return resolution
 
 
 def evalTurnOut(state, dealerTotal):

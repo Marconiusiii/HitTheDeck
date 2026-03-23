@@ -2,11 +2,12 @@
 
 import unittest
 
-from engine import ActionChoice, ActionReq, ActionType, GameSession, RoundState, Shoe
+from engine import ActionChoice, ActionReq, ActionType, GameSession, RoundPhase
+from engine import RoundState, Shoe
 from engine import addCard, applyAction, bankrollDelta
-from engine import applyNonSplitIntent, parsePlayerIntent
+from engine import applyInsPhase, applyNonSplitIntent, parsePlayerIntent
 from engine import canSplitCards, compareHandTotals, dealRound, parseBankInput
-from engine import parseDeckCount, startSession
+from engine import parseDeckCount, startRound, startSession
 from engine import deckGenerator, drawCardToHand, handValue, isBlackjack
 from engine import evaluateInitialBlackjack, evalTurnOut, resolveInsurance, resolveRound
 from engine import playDealerTurn, playerDoubleDownStep, playerHitStep, settleSplitHand
@@ -457,6 +458,26 @@ class EngineTests(unittest.TestCase):
 		self.assertIsNotNone(session.shoe)
 		self.assertEqual(session.bet, 0)
 		self.assertIsNone(session.roundState)
+
+	def testStartRoundPhase(self):
+		session = startSession(200, 1)
+		session.bet = 10
+		state, initBj = startRound(session)
+		self.assertIs(session.roundState, state)
+		self.assertIn(state.phase, (RoundPhase.insurance, RoundPhase.playerTurn, RoundPhase.roundOver))
+		self.assertIn(initBj, ("none", "push", "playerBj", "dealerBj"))
+
+	def testApplyInsPhase(self):
+		state = RoundState(
+			bank=100,
+			bet=20,
+			dealerHand=[10, 1],
+			phase=RoundPhase.insurance,
+		)
+		insRes = applyInsPhase(state, True)
+		self.assertEqual(insRes.result, "insWin")
+		self.assertEqual(state.bank, 100)
+		self.assertEqual(state.phase, RoundPhase.roundOver)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,10 @@
 
 import os
 from engine import ActionChoice, ActionType, dealRound, handValue, isBlackjack
-from engine import evaluateInitialBlackjack, resolveInsurance, resolveRound
-from engine import evalTurnOut
-from engine import parseBankInput, parseDeckCount, parsePlayerIntent, playDealerTurn
-from engine import resolveTurnFlow, startSession
+from engine import RoundPhase, applyInsPhase, applySettlePhase
+from engine import applyTurnPhase, evaluateInitialBlackjack, parseBankInput
+from engine import parseDeckCount, parsePlayerIntent, playDealerTurn, startRound
+from engine import startSession
 from ui import pickLoseMsg, promptIns, renderInitBj, renderInsRes, renderRoundEvent, uiTxt
 
 # Version Number
@@ -123,10 +123,10 @@ def renderPlayEvent(event):
 
 
 def resolveDealerPhase(state, dVal):
-	resolution = resolveRound(state, dVal)
+	state.dealerTotal = dVal
+	resolution = applySettlePhase(state)
 	for event in resolution.events:
 		renderRoundEvent(event)
-	state.bank += resolution.bankDelta
 	return state
 
 def resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, shoe):
@@ -135,15 +135,20 @@ def resolveRoundEnd(state, dVal, dCard1, dCard2, dealerHand, playerHand, bet, sh
 		renderRoundEvent(turnOut.events[0])
 		if turnOut.events[0].code == "playerBust":
 			state.bank -= bet
+		state.phase = RoundPhase.roundOver
 		return state
 	if len(playerHand) >= 5:
 		print("You just hit up to a 5 Card Charlie! Even money coming to you!")
 		state.bank += bet
 		print("You now have ${} in your bank!".format(state.bank))
 		state.charliePaid = True
-	dVal = dealer(dCard1, dCard2, dealerHand, shoe)
-	state.dealerTotal = dVal
-	return resolveDealerPhase(state, dVal)
+	if state.phase == RoundPhase.dealerTurn:
+		dVal = dealer(dCard1, dCard2, dealerHand, shoe)
+		state.dealerTotal = dVal
+		state.phase = RoundPhase.settle
+	if state.phase == RoundPhase.settle:
+		return resolveDealerPhase(state, state.dealerTotal)
+	return state
 
 def setupSession():
 	print("Hit the Deck! v.{}\n\t\tBy: Marco Salsiccia".format(version))
@@ -225,9 +230,7 @@ def runRoundFlow(session):
 		session.shoe.reset()
 		print("\nShuffling!\n")
 		session.shoe.countNow = 0
-	state = dealRound(session.shoe, session.bank, session.bet)
-	state.charliePaid = False
-	session.roundState = state
+	state, initBj = startRound(session)
 	card1, card2 = state.playerCards
 	dCard1, dCard2 = state.dealerCards
 	playerHand = state.playerHand
@@ -236,28 +239,18 @@ def runRoundFlow(session):
 	d2 = dealerHand[1]
 	dVal = state.dealerTotal
 	dealerBlackjack = isBlackjack(dealerHand)
-	initBj = evaluateInitialBlackjack(state.playerTotal, dealerHand)
 	if renderInitBj(initBj, state, card1, card2):
 		session.bank = state.bank
 		return session
 	print("You drew the {card1} and the {card2} for a total of {hand}.\nDealer is showing {dealer}.".format(card1=card1, card2=card2, hand=handVal, dealer=dCard2))
-	if d2 == 1:
+	if state.phase == RoundPhase.insurance:
 		tookIns = promptIns(readInput)
-		insRes = resolveInsurance(d2, tookIns, dealerBlackjack, session.bet)
-		state.bank += insRes.bankDelta
+		insRes = applyInsPhase(state, tookIns)
 		renderInsRes(insRes, session.bet)
-		if insRes.roundOver:
+		if state.phase == RoundPhase.roundOver:
 			session.bank = state.bank
 			return session
-	else:
-		dealerRes = resolveInsurance(d2, False, dealerBlackjack, session.bet)
-		if dealerRes.roundOver:
-			print("Dealer has Blackjack.\n{}".format(pickLoseMsg()))
-			state.bank += dealerRes.bankDelta
-			session.bank = state.bank
-			return session
-	turnRes = resolveTurnFlow(
-		card1.split()[0] == card2.split()[0],
+	turnRes = applyTurnPhase(
 		state,
 		session.shoe,
 		readTurnChoice,
