@@ -166,7 +166,7 @@ def promptIns(readFn=input):
 
 def renderInsRes(result, bet):
 	if result.result == "insWin":
-		print("Dealer has 21. Insurance wins and offsets your main bet.")
+		print("Dealer has 21. Insurance pays ${} and returns your full ${} main bet.".format(bet, bet))
 	elif result.result == "insLose":
 		print("Dealer does not have 21! You pay ${} to Insurance.".format(bet//2))
 	elif result.result == "dealerBj":
