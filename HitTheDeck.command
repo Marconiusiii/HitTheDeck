@@ -169,8 +169,8 @@ def setupSession():
 		else:
 			print("That wasn't a number between 1 and 6! It wasn't even a number! Try again, you silly goose.")
 			continue
-		session = startSession(bank, deckCnt)
-		return session
+	session = startSession(bank, deckCnt)
+	return session
 
 def runBetFlow(session):
 	while True:
